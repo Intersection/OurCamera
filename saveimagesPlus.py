@@ -23,45 +23,74 @@ from argparse import RawTextHelpFormatter
 import os;
 from multiprocessing import Pool, TimeoutError
 
-global dictionaryExcludes
-dictionaryExcludes= {}
 DOT_CAMERA_LIST_URL = "http://dotsignals.org/new-data.php?query="
+DOT_CAMERA_ID_URL = "http://dotsignals.org/google_popup.php?cid="
+saveDirectory = "/tmp/rawimages/"
+
+class CameraObject:
+    cameraId = None
+    locationId = None
+    latitude = None
+    longitude = None
+    name = None
 
 
-def saveFile(cameraNumber):
-    global dictionaryExcludes
-    excludes = []
-    if not dictionaryExcludes.has_key(cameraNumber):
-        url = "http://207.251.86.238/cctv"
-        append = ".jpg?math=0.011125243364920934"
-        now = datetime.datetime.now()
-        filePath = args.save_directory+str(cameraNumber)+"_"+str(now)+".jpg"
-        urlToSave = url + str(cameraNumber)+append
-        urllib.urlretrieve(urlToSave, filePath)
-        if (os.path.getsize(filePath) < 11000):
-            excludes.append(cameraNumber)
-            os.remove(filePath)
-            print("Exlude "+str(cameraNumber))
-        print("Save " + str(cameraNumber))
-    return excludes
 
-def download_dot_files(pool):
-    global dictionaryExcludes
-    total_excludes = []
-    excludes = pool.imap_unordered(saveFile,range(500))
-    #print("excludes is "+str(excludes))
-    if (len(dictionaryExcludes)<2):
-        total_excludes = [ent for sublist in excludes for ent in sublist]
-        dictionaryExcludes = dict((el, 0) for el in total_excludes)
-        print("DictionaryExcludes is "+str(dictionaryExcludes))
+def saveFile(cameraObject):
+    print("Camer " + str(cameraObject))
+    assert isinstance(cameraObject, CameraObject)
+    cameraId = cameraObject.cameraId
+    url = "http://207.251.86.238/cctv"
+    append = ".jpg?math=0.011125243364920934"
+    now = datetime.datetime.now()
+    filePath = saveDirectory + str(cameraId) + "_" + str(now) + ".jpg"
+    urlToSave = url + str(cameraId) + append
+    urllib.urlretrieve(urlToSave, filePath)
+    if (os.path.getsize(filePath) < 11000):
+        os.remove(filePath)
 
-    #t = threading.Timer(1.0, download_dot_files).start()
 
-def getDOTLocationMapAsJson():
-    return json.loads(urllib.urlretrieve(DOT_CAMERA_LIST_URL).read())
+class SaveImages:
 
-def getDOTCameraIdForLocationId():
-    return 1
+    def download_dot_files(self,pool,cameraObjects):
+        print("download_dot_files")
+        pool.map(saveFile, cameraObjects)
+
+    def getDOTLocationMapAsJson(self):
+        return json.loads(urllib.urlopen(DOT_CAMERA_LIST_URL).read())
+
+    def getDOTCameraIdForLocationId(self,locationId):
+        page = urllib.urlopen(DOT_CAMERA_ID_URL+str(locationId)).read()
+        cameraId = page.find(".jpg")
+        for i in range(0,5):
+            if page[cameraId-i]=="v":
+                return int(page[cameraId-i+1:cameraId])
+
+    def getCameraObjectsWithoutCameraId(self):
+        cameraObjectsWithoutCameraId = []
+        i = 0
+        for marker in self.getDOTLocationMapAsJson()["markers"]:
+            i +=1
+            if i>3:
+                return cameraObjectsWithoutCameraId
+            cameraObject = CameraObject()
+            cameraObject.locationId = marker["id"]
+            cameraObject.latitude = marker["latitude"]
+            cameraObject.longitude = marker["longitude"]
+            cameraObject.name = marker["content"]
+            cameraObjectsWithoutCameraId.append(cameraObject)
+        return cameraObjectsWithoutCameraId
+
+
+    def fillCameraObjectsWithCameraId(self,cameraObjectsWithoutCameraIds):
+        i = 0
+        total = len(cameraObjectsWithoutCameraIds)
+        for cameraObject in cameraObjectsWithoutCameraIds:
+            i +=1
+            cameraObject.cameraId =self.getDOTCameraIdForLocationId(cameraObject.locationId)
+            print("Filling "+str(i)+" of total "+str(total))
+        return cameraObjectsWithoutCameraIds #now filled with cameraIds
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -70,8 +99,10 @@ if __name__ == '__main__':
     parser.add_argument('-save_directory', help='the directory you want to save the images to')
     args = parser.parse_args()
     pool = Pool(processes=20)              # start 4 worker processes
+    cameraObjects = SaveImages().fillCameraObjectsWithCameraId(SaveImages().getCameraObjectsWithoutCameraId())
+    #SaveImages().download_dot_files(pool,cameraObjects)
+    SaveImages().download_dot_files(pool,cameraObjects)
 
-    download_dot_files(pool)
-    while(True):
-        download_dot_files(pool)
+    #while(True):
+    #    SaveImages.download_dot_files(pool)
 
