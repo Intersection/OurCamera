@@ -34,10 +34,7 @@ class CameraObject:
     longitude = None
     name = None
 
-
-
 def saveFile(cameraObject):
-    print("Camer " + str(cameraObject))
     assert isinstance(cameraObject, CameraObject)
     cameraId = cameraObject.cameraId
     url = "http://207.251.86.238/cctv"
@@ -48,7 +45,6 @@ def saveFile(cameraObject):
     urllib.urlretrieve(urlToSave, filePath)
     if (os.path.getsize(filePath) < 11000):
         os.remove(filePath)
-
 
 class SaveImages:
 
@@ -71,7 +67,7 @@ class SaveImages:
         i = 0
         for marker in self.getDOTLocationMapAsJson()["markers"]:
             i +=1
-            if i>3:
+            if i>50:
                 return cameraObjectsWithoutCameraId
             cameraObject = CameraObject()
             cameraObject.locationId = marker["id"]
@@ -100,9 +96,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     pool = Pool(processes=20)              # start 4 worker processes
     cameraObjects = SaveImages().fillCameraObjectsWithCameraId(SaveImages().getCameraObjectsWithoutCameraId())
-    #SaveImages().download_dot_files(pool,cameraObjects)
     SaveImages().download_dot_files(pool,cameraObjects)
-
-    #while(True):
-    #    SaveImages.download_dot_files(pool)
+    while(True):
+        SaveImages().download_dot_files(pool,cameraObjects)
 

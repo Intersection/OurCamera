@@ -1,6 +1,6 @@
 import unittest
 from mock import patch
-from saveimagesPlus import SaveImages,CameraObject
+from saveimagesPlus import *
 import copy
 
 class TestSaveImages(unittest.TestCase):
@@ -102,14 +102,14 @@ class TestSaveImages(unittest.TestCase):
     def test_save_images(self):
         with patch("urllib.urlretrieve") as mock_urlretrieve, \
                 patch("os.path.getsize",return_value=5) as mock_getsize, patch("os.remove") as mock_remove:
-            SaveImages().saveFile(self.MockCameraObjectsWithoutCameraId.mockObject2,"testpath")
+            saveFile(self.MockCameraObjectsWithoutCameraId.mockObject2)
             assert mock_urlretrieve.call_count ==1
             assert mock_getsize.call_count ==1
             assert mock_remove.call_count ==1
 
         with patch("urllib.urlretrieve") as mock_urlretrieve, \
                 patch("os.path.getsize",return_value=50000) as mock_getsize, patch("os.remove") as mock_remove:
-            SaveImages().saveFile(self.MockCameraObjectsWithoutCameraId.mockObject2,"testpath")
+            saveFile(self.MockCameraObjectsWithoutCameraId.mockObject2)
             assert mock_urlretrieve.call_count ==1
             assert mock_getsize.call_count ==1
             assert mock_remove.call_count ==0
