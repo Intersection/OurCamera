@@ -2,16 +2,12 @@ r"""Download images from NYC DOT
 
 This executable is used to download DOT images from http://dotsignals.org/:
 
-By inspecting http://dotsignals.org/ you can determine the URL of the camera you are interested in for example
-http://207.251.86.238/cctv476.jpg?math=0.29640904121642864
-
-* the url's seem to be static over months.
-* DOT does seem to turn the cameras occasionally i.e. move it to cover a different street
+This class first pings a DOT backend to get the list of location ids, then associates location ids to camera ids, and
+then downloads images. 
 
 
 Example usage:
     ./download_dot_files \
-        --url=http://207.251.86.238/cctv476.jpg?math=0.29640904121642864 \
         --save_directory=path/to/data_dir
 """
 import json
@@ -91,7 +87,6 @@ class SaveImages:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Download images every second from dotsignals.org', formatter_class=RawTextHelpFormatter)
-    #parser.add_argument('-url', help='the url for the image you want to download')
     parser.add_argument('-save_directory', help='the directory you want to save the images to')
     args = parser.parse_args()
     pool = Pool(processes=20)              # start 4 worker processes
