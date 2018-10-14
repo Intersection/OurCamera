@@ -18,10 +18,11 @@ import sys
 sys.path.append('./models-master/research/')
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
-
+import boto3
 import argparse
 from argparse import RawTextHelpFormatter
 import time
+import random
 import numpy as np
 import os
 import tensorflow as tf
@@ -37,36 +38,63 @@ import matplotlib.path as mpltPath
 from PIL import Image
 import scipy.misc
 
+DETECTION_LIMIT  = .4
 
-def processimages(path_images_dir, path_labels_map,save_directory):
+def createGraph():
     pathcpkt = 'data/output_inference_graph.pb/frozen_inference_graph_resnet_50.pb'
-    csv_file = 'data/csvfile.csv'
-    num_classes = 6
-
     detection_graph = tf.Graph()
-
     with detection_graph.as_default():
         od_graph_def = tf.GraphDef()
         with tf.gfile.GFile(pathcpkt, 'rb') as fid:
             serialized_graph = fid.read()
             od_graph_def.ParseFromString(serialized_graph)
             tf.import_graph_def(od_graph_def, name='')
+    return detection_graph
 
+
+def createCategoryIndex(path_labels_map):
+    num_classes = 6
     label_map = label_map_util.load_labelmap(path_labels_map)
     categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=num_classes,
                                                                 use_display_name=True)
-    category_index = label_map_util.create_category_index(categories)
+    return label_map_util.create_category_index(categories)
 
-    f = open(csv_file, 'w')
+def load_image_into_numpy_array(imageconvert):
+    (im_width, im_height) = imageconvert.size
+    try:
+        return np.array(imageconvert.getdata()).reshape((im_height, im_width, 3)).astype(np.uint8)
+    except ValueError:
+        return np.array([])
+
+def saveAnnotatedImage(filePath):
+    return True
+
+def logTrafficResult(trafficResult,table):
+    assert isinstance(trafficResult, TrafficResult)
+    table.put_item(
+        Item={
+            'timestamp': trafficResult.timestamp,
+            'cameraLocationId':trafficResult.cameraLocationId,
+            'cars': trafficResult.numberCars,
+            'trucks': trafficResult.numberTrucks
+        }
+    )
+
+def getDatabaseInstance():
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('traffic')
+    return table
 
 
-    def load_image_into_numpy_array(imageconvert):
-        (im_width, im_height) = imageconvert.size
-        try:
-            return np.array(imageconvert.getdata()).reshape(
-                (im_height, im_width, 3)).astype(np.uint8)
-        except ValueError:
-            return np.array([])
+class TrafficResult:
+    timestamp = None
+    cameraLocationId = None
+    numberCars = None
+    numberTrucks = None
+
+def processimages(path_images_dir, path_labels_map,save_directory):
+    detection_graph = createGraph()
+    category_index = createCategoryIndex(path_labels_map)
 
     with detection_graph.as_default():
         with tf.Session(graph=detection_graph) as sess:
@@ -82,7 +110,6 @@ def processimages(path_images_dir, path_labels_map,save_directory):
 
             while(True):
                 for testpath in os.listdir(path_images_dir):
-
                     start_time = time.time()
                     timestamp = testpath.split(".jpg")[0]
                     numCars =0
@@ -105,49 +132,43 @@ def processimages(path_images_dir, path_labels_map,save_directory):
                         [detection_boxes, detection_scores, detection_classes, num_detections],
                         feed_dict={image_tensor: image_np_expanded})
 
-                    # Visualization of the results of a detection.
-                    vis_util.visualize_boxes_and_labels_on_image_array(
-                        image_np,
-                        np.squeeze(boxes),
-                        np.squeeze(classes).astype(np.int32),
-                        np.squeeze(scores),
-                        category_index,
-                        min_score_thresh=0.4,
-                        use_normalized_coordinates=True,
-                        line_thickness=2)
                     scores = np.squeeze(scores)
                     boxes = np.squeeze(boxes)
                     for i in range(boxes.shape[0]):
-                        if scores[i] > .4:
+                        if scores[i] > DETECTION_LIMIT:
                             box = tuple(boxes[i].tolist())
-
 
                             classes = np.squeeze(classes).astype(np.int32)
                             if classes[i] in category_index.keys():
                                 class_name = category_index[classes[i]]['name']
-                            else:
-                                class_name = 'N/A'
+                                if class_name == 'car':
+                                    numCars=numCars+1;
+                                elif class_name == 'truck':
+                                    numTrucks=numTrucks+1;
 
-                            if class_name == 'car':
-                                numCars=numCars+1;
-
-
-                            elif class_name == 'truck' or class_name == 'police' or class_name == 'ups':
-                                numTrucks=numTrucks+1;
-
-
-                    # write to a csv file whenever there is a vehicle, how many and of what type with timestamp
+                    trafficResults = TrafficResult()
+                    trafficResults.numberCars = numCars
+                    trafficResults.numberTrucks = numTrucks
+                    trafficResults.timestamp = timestamp
+                    logTrafficResult(trafficResults)
 
                     print("Process Time " + str(time.time() - start_time))
                     print("There are "+str(numCars)+" cars and "+str(numTrucks)+" trucks/others");
-                    scipy.misc.imsave(save_directory + testpath, image_np)
+                    if (random.randint(100)==1):
+                        # Visualization of the results of a detection.
+                        vis_util.visualize_boxes_and_labels_on_image_array(
+                            image_np,
+                            np.squeeze(boxes),
+                            np.squeeze(classes).astype(np.int32),
+                            np.squeeze(scores),
+                            category_index,
+                            min_score_thresh=0.4,
+                            use_normalized_coordinates=True,
+                            line_thickness=2)
+                        scipy.misc.imsave(save_directory + testpath, image_np)
+                        saveAnnotatedImage(save_directory + testpath)
+                        os.remove(save_directory + testpath)
                     os.remove(path_images_dir + '/' + testpath)
-        f.close()
-        return csv_file
-
-
-
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
