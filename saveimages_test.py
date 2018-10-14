@@ -1,6 +1,6 @@
 import unittest
 from mock import patch
-from saveimagesPlus import *
+from saveimages import *
 import copy
 
 class TestSaveImages(unittest.TestCase):
@@ -27,6 +27,8 @@ class TestSaveImages(unittest.TestCase):
         mockObject2 = copy.deepcopy(mockObject)
         mockObject2.cameraId = 126
         mockObjects2 = [mockObject2]
+        mockJsonString2 = '{"latitude": 123.123, "locationId": 123, "cameraId": 126, "longitude": 123.123}'
+
 
     class MockDOTLocationMapAsJson:
         mocks = {"markers": [{
@@ -99,7 +101,8 @@ class TestSaveImages(unittest.TestCase):
             SaveImages().fillCameraObjectsWithCameraId(mockObjects)
             assert mockObjects[0].cameraId == 261
 
-    def test_save_images(self):
+    @patch('saveimages.boto3')
+    def test_save_images(self,boto3):
         with patch("urllib.urlretrieve") as mock_urlretrieve, \
                 patch("os.path.getsize",return_value=5) as mock_getsize, patch("os.remove") as mock_remove:
             saveFile(self.MockCameraObjectsWithoutCameraId.mockObject2)
@@ -107,13 +110,13 @@ class TestSaveImages(unittest.TestCase):
             assert mock_getsize.call_count ==1
             assert mock_remove.call_count ==1
 
-        with patch("urllib.urlretrieve") as mock_urlretrieve, \
-                patch("os.path.getsize",return_value=50000) as mock_getsize, patch("os.remove") as mock_remove:
+        with patch("urllib.urlretrieve") as mock_urlretrieve2, \
+                patch("os.path.getsize",return_value=50000) as mock_getsize2, patch("os.remove") as mock_remove2,\
+                patch("os.rename") as mock_rename2:
             saveFile(self.MockCameraObjectsWithoutCameraId.mockObject2)
-            assert mock_urlretrieve.call_count ==1
-            assert mock_getsize.call_count ==1
-            assert mock_remove.call_count ==0
+            assert mock_urlretrieve2.call_count ==1
+            assert mock_getsize2.call_count ==1
+            assert mock_remove2.call_count ==0
 
-
-
-
+    def test_get_JSON_String_Object_from_Class(self):
+        assert self.MockCameraObjectsWithoutCameraId.mockJsonString2 == SaveImages().getJSONStringFromObject(self.MockCameraObjectsWithoutCameraId.mockObject2)
