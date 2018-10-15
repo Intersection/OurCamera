@@ -22,12 +22,15 @@ import boto3
 from botocore.stub import Stubber
 import datetime
 import botocore
+import  time
 
 DOT_CAMERA_LIST_URL = "http://dotsignals.org/new-data.php?query="
 DOT_CAMERA_ID_URL = "http://dotsignals.org/google_popup.php?cid="
 saveDirectory = "/tmp/rawimages/"
 outDirectory = "/tmp/preprocessed/"
-BUCKET = "ourcamera"
+BUCKET = "personal-ourcamera"
+MAX_FILES_TO_DOWNLOAD = 2000
+save_to_aws = True
 
 class CameraObject:
     cameraId = None
@@ -48,16 +51,63 @@ def saveFile(cameraObject):
     if (os.path.getsize(filePath) < 11000):
         os.remove(filePath)
     else:
-        SaveImages().saveFileToS3(filePath,fileName)
+        SaveImages().saveFileToS3(filePath,fileName,"raw",outDirectory+"/"+fileName)
 
 class SaveImages:
 
-    def saveFileToS3(self,filePath,fileName):
+    class RenameAfterUpload(object):
+        def __init__(self, currentFilePath, nextFilePath):
+            self._currentFilePath = currentFilePath
+            self._nextFilePath = nextFilePath
+            self._size = float(os.path.getsize(currentFilePath))
+            self._seen_so_far = 0
+            self._lock = threading.Lock()
+
+        def __call__(self, bytes_amount):
+
+            with self._lock:
+                self._seen_so_far += bytes_amount
+                percentage = (self._seen_so_far / self._size) * 100
+                print("Percentage" +str(percentage))
+                if percentage == 100.0:
+                    os.rename(self._currentFilePath, self._nextFilePath)
+
+    class DeleteAfterUpload(object):
+        def __init__(self, currentFilePath):
+            self._currentFilePath = currentFilePath
+            self._size = float(os.path.getsize(currentFilePath))
+            self._seen_so_far = 0
+            self._lock = threading.Lock()
+
+        def __call__(self, bytes_amount):
+
+            with self._lock:
+                self._seen_so_far += bytes_amount
+                percentage = (self._seen_so_far / self._size) * 100
+                print("Percentage" +str(percentage))
+                if percentage == 100.0:
+                    os.remove(self._currentFilePath)
+
+    def renameFunction(self,filePath,nextFilePath):
+        print()
+        os.rename(filePath, nextFilePath)
+
+    def saveFileToS3(self,filePath, fileName,s3BaseDirectory,renamedFilePathOnSuccess):
+        if not save_to_aws:
+            return
         s3 = boto3.client('s3')
         try:
-            s3.upload_file(filePath, BUCKET, SaveImages().getS3Path(fileName))
-            os.rename(filePath,outDirectory+fileName)
+            if renamedFilePathOnSuccess:
+                s3.upload_file(filePath, BUCKET, s3BaseDirectory + "/" +SaveImages().getS3Path(fileName),
+                           Callback=self.RenameAfterUpload(filePath,renamedFilePathOnSuccess))
+            else:
+                s3.upload_file(filePath, BUCKET, s3BaseDirectory + "/" + SaveImages().getS3Path(fileName),
+                               Callback=self.DeleteAfterUpload(filePath))
+
         except Exception as e:
+            print("Filepath is "+filePath)
+            print("fileName is "+fileName)
+            print("s3Directory "+s3BaseDirectory)
             print("exception is "+str(e))
 
     def getS3Path(self,fileName):
@@ -110,6 +160,27 @@ class SaveImages:
     def getJSONStringFromObject(self,cameraObjects):
         return json.dumps(cameraObjects.__dict__)
 
+    def returnTrueToDownloadMoreImages(self,numberFilesDownloadPoint):
+        if len([name for name in os.listdir(saveDirectory)])<numberFilesDownloadPoint:
+            return True
+        return False
+
+    def getTimestampAndLocationId(self,testPath):
+        try:
+            splits = testPath.split("_")
+            if (len(splits) > 0):
+                locationId = splits[1]
+                timestamp = splits[2][:-4]
+                return int(timestamp), int(locationId)
+        except:
+            return 0, 0
+        return 0, 0
+
+    def saveObjectsToFile(self,filePath,objectsToSave):
+        with open(filePath, 'w') as outfile:
+            json.dump([ob.__dict__ for ob in objectsToSave], outfile)
+        self.saveFileToS3(filePath,"cameraobjects","map","")
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Download images every second from dotsignals.org', formatter_class=RawTextHelpFormatter)
@@ -117,8 +188,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
     pool = Pool(processes=20)              # start 4 worker processes
     cameraObjects = SaveImages().fillCameraObjectsWithCameraId(SaveImages().getCameraObjectsWithoutCameraId())
-    # saveCameraObjectsToJSONFILEAndUpload
+    SaveImages().saveObjectsToFile("/tmp/objects.json",cameraObjects)
     SaveImages().download_dot_files(pool,cameraObjects)
-    #while(True):
-    #    SaveImages().download_dot_files(pool,cameraObjects)
+    while (True):
+        if SaveImages().returnTrueToDownloadMoreImages(MAX_FILES_TO_DOWNLOAD):
+            SaveImages().download_dot_files(pool,cameraObjects)
+        else:
+            time.sleep(1.0)
 

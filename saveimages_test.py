@@ -120,3 +120,18 @@ class TestSaveImages(unittest.TestCase):
 
     def test_get_JSON_String_Object_from_Class(self):
         assert self.MockCameraObjectsWithoutCameraId.mockJsonString2 == SaveImages().getJSONStringFromObject(self.MockCameraObjectsWithoutCameraId.mockObject2)
+
+    def test_return_true_when_able_to_download(self):
+        with patch("os.listdir", return_value=["test1","test2"]) as mock_getsize:
+            assert SaveImages().returnTrueToDownloadMoreImages(4)
+            assert SaveImages().returnTrueToDownloadMoreImages(1) == False
+
+    def test_get_timestamp_and_location_id(self):
+        timestamp,locationId = SaveImages().getTimestampAndLocationId("ignore_1_1539560991.jpg")
+        assert timestamp == 1539560991
+        assert locationId == 1
+
+        timestamp,locationId = SaveImages().getTimestampAndLocationId(".DS_Store")
+        assert timestamp == 0
+        assert locationId == 0
+
