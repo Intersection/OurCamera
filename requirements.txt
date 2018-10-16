@@ -3,3 +3,4 @@ pytest-cov
 mock
 boto3
 tensorflow
+matplotlib

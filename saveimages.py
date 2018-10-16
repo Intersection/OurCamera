@@ -1,18 +1,18 @@
 r"""Download images from NYC DOT
 
-This executable is used to download DOT images from http://dotsignals.org/:
+This executable is used to download DOT images from http://nyctmc.org/:
 
 This class first pings a DOT backend to get the list of location ids, then associates location ids to camera ids, and
 then downloads images.
 
 
 Example usage:
-    ./download_dot_files \
-        --save_directory=path/to/data_dir
+    python saveimages.py
 """
 import json
 import urllib
 import threading
+import logging
 import datetime
 import argparse
 from argparse import RawTextHelpFormatter
@@ -24,12 +24,13 @@ import datetime
 import botocore
 import  time
 
-DOT_CAMERA_LIST_URL = "http://dotsignals.org/new-data.php?query="
-DOT_CAMERA_ID_URL = "http://dotsignals.org/google_popup.php?cid="
+DOT_CAMERA_LIST_URL = "http://webcams.nyctmc.org/new-data.php?query="
+DOT_CAMERA_ID_URL = "http://webcams.nyctmc.org/google_popup.php?cid="
 saveDirectory = "/tmp/rawimages/"
 outDirectory = "/tmp/preprocessed/"
 BUCKET = "personal-ourcamera"
 MAX_FILES_TO_DOWNLOAD = 2000
+NUMBER_FILES_DOWNLOAD_LIMIT = 1000
 save_to_aws = True
 
 class CameraObject:
@@ -68,7 +69,7 @@ class SaveImages:
             with self._lock:
                 self._seen_so_far += bytes_amount
                 percentage = (self._seen_so_far / self._size) * 100
-                print("Percentage" +str(percentage))
+                logging.warning("Percentage" +str(percentage))
                 if percentage == 100.0:
                     os.rename(self._currentFilePath, self._nextFilePath)
 
@@ -84,12 +85,12 @@ class SaveImages:
             with self._lock:
                 self._seen_so_far += bytes_amount
                 percentage = (self._seen_so_far / self._size) * 100
-                print("Percentage" +str(percentage))
+                logging.warning("Percentage" +str(percentage))
                 if percentage == 100.0:
                     os.remove(self._currentFilePath)
 
     def renameFunction(self,filePath,nextFilePath):
-        print()
+        logging.warning()
         os.rename(filePath, nextFilePath)
 
     def saveFileToS3(self,filePath, fileName,s3BaseDirectory,renamedFilePathOnSuccess):
@@ -105,10 +106,10 @@ class SaveImages:
                                Callback=self.DeleteAfterUpload(filePath))
 
         except Exception as e:
-            print("Filepath is "+filePath)
-            print("fileName is "+fileName)
-            print("s3Directory "+s3BaseDirectory)
-            print("exception is "+str(e))
+            logging.warning("Filepath is "+filePath)
+            logging.warning("fileName is "+fileName)
+            logging.warning("s3Directory "+s3BaseDirectory)
+            logging.warning("exception is "+str(e))
 
     def getS3Path(self,fileName):
         now = datetime.datetime.now()
@@ -119,7 +120,7 @@ class SaveImages:
         return str(cameraObject.cameraId) + "_" +str(cameraObject.locationId) + "_" + str(epoch) + ".jpg"
 
     def download_dot_files(self,pool,cameraObjects):
-        print("download_dot_files")
+        logging.warning("download_dot_files")
         pool.map(saveFile, cameraObjects)
 
     def getDOTLocationMapAsJson(self):
@@ -137,7 +138,7 @@ class SaveImages:
         i = 0
         for marker in self.getDOTLocationMapAsJson()["markers"]:
             i +=1
-            if i>5:
+            if i>NUMBER_FILES_DOWNLOAD_LIMIT:
                 return cameraObjectsWithoutCameraId
             cameraObject = CameraObject()
             cameraObject.locationId = marker["id"]
@@ -154,7 +155,7 @@ class SaveImages:
         for cameraObject in cameraObjectsWithoutCameraIds:
             i +=1
             cameraObject.cameraId =self.getDOTCameraIdForLocationId(cameraObject.locationId)
-            print("Filling "+str(i)+" of total "+str(total))
+            logging.warning("Filling "+str(i)+" of total "+str(total))
         return cameraObjectsWithoutCameraIds #now filled with cameraIds
 
     def getJSONStringFromObject(self,cameraObjects):
@@ -182,10 +183,6 @@ class SaveImages:
         self.saveFileToS3(filePath,"cameraobjects","map","")
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Download images every second from dotsignals.org', formatter_class=RawTextHelpFormatter)
-    parser.add_argument('-save_directory', help='the directory you want to save the images to')
-    args = parser.parse_args()
     pool = Pool(processes=20)              # start 4 worker processes
     cameraObjects = SaveImages().fillCameraObjectsWithCameraId(SaveImages().getCameraObjectsWithoutCameraId())
     SaveImages().saveObjectsToFile("/tmp/objects.json",cameraObjects)

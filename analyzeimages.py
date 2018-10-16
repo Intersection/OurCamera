@@ -6,14 +6,12 @@ and graphs for the amount of time bicycle lanes and bus stops are blocked by veh
 
 Example usage:
     ./analyzeimages \
-        -path_images ./data/rawimages/
+        -path_images /tmp/preprocessed
         -path_labels_map data/car_label_map.pbtxt
-        -save_directory data/processedimages/
+        -save_directory /tmp/processed
 """
 
 import sys
-
-#from matplotlib.ticker import FormatStrFormatter, FuncFormatter
 
 sys.path.append('./models-master/research/')
 from object_detection.utils import label_map_util
@@ -33,14 +31,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from collections import defaultdict
 from io import StringIO
-# from matplotlib import pyplot as plt
 import matplotlib.path as mpltPath
 save_to_aws = True
 
 from PIL import Image
 import scipy.misc
 
-DETECTION_LIMIT  = .4
+DETECTION_LIMIT = .4
 
 
 class TrafficResult:
