@@ -33,6 +33,8 @@ from collections import defaultdict
 from io import StringIO
 import matplotlib.path as mpltPath
 save_to_aws = True
+ACCESS_KEY = ""
+SECRET_KEY = ""
 
 from PIL import Image
 import scipy.misc
@@ -41,17 +43,17 @@ DETECTION_LIMIT = .4
 
 
 class TrafficResult:
-    timestamp = None
-    cameraLocationId = None
-    numberCars = None
-    numberTrucks = None
+    timestamp = 0
+    cameraLocationId = 0
+    numberCars = 0
+    numberTrucks = 0
 
 class AnalyzeImages:
     global table
     table = None
 
     def createGraph(self):
-        pathcpkt = 'data/output_inference_graph.pb/frozen_inference_graph_resnet_50.pb'
+        pathcpkt = './faster_rcnn_resnet50_coco_2018_01_28/frozen_inference_graph.pb'
         detection_graph = tf.Graph()
         with detection_graph.as_default():
             od_graph_def = tf.GraphDef()
@@ -77,14 +79,19 @@ class AnalyzeImages:
             return np.array([])
 
     def saveAnnotatedImage(self,fileName,filePath,s3directory):
-        return SaveImages().saveFileToS3(filePath,fileName,s3directory,"")
+        return SaveImages().saveFileToS3(filePath,fileName,s3directory,False,ACCESS_KEY,SECRET_KEY)
 
     def getDatabaseInstance(self):
         global table
         if table != None:
             return table
-        dynamodb = boto3.resource('dynamodb')
-        table = dynamodb.Table('traffic')
+        session = boto3.Session(
+            aws_access_key_id=ACCESS_KEY,
+            aws_secret_access_key=SECRET_KEY,
+            region_name="us-east-1"
+        )
+        dynamodb = session.resource('dynamodb')
+        table = dynamodb.Table('ourcamera')
         return table
 
     def logTrafficResult(self, trafficResult):
@@ -93,7 +100,7 @@ class AnalyzeImages:
         assert isinstance(trafficResult, TrafficResult)
         self.getDatabaseInstance().put_item(
             Item={
-                'timestamp': trafficResult.timestamp,
+                'timestamp': str(trafficResult.timestamp),
                 'cameraLocationId':trafficResult.cameraLocationId,
                 'cars': trafficResult.numberCars,
                 'trucks': trafficResult.numberTrucks
@@ -165,7 +172,7 @@ class AnalyzeImages:
 
                         print("Process Time " + str(time.time() - start_time))
                         print("There are "+str(numCars)+" cars and "+str(numTrucks)+" trucks/others");
-                        if True:#(random.randint(0,100)==1):
+                        if (random.randint(0,100)==1):
                             # Visualization of the results of a detection.
                             vis_util.visualize_boxes_and_labels_on_image_array(
                                 image_np,
@@ -189,5 +196,10 @@ if __name__ == '__main__':
     parser.add_argument('-path_images', help='the folder with all the downloaded images in it')
     parser.add_argument('-path_labels_map', help='the file with the integer to label map')
     parser.add_argument('-save_directory', help='the directory you want to save the annotated images to')
+    parser.add_argument('-access_key', help='aws access key')
+    parser.add_argument('-secret_key', help='aws secret key')
     args = parser.parse_args()
+    SaveImages().mkdir_p(args.save_directory)
+    ACCESS_KEY = args.access_key
+    SECRET_KEY = args.secret_key
     AnalyzeImages().processimages(args.path_images,args.path_labels_map,args.save_directory)
