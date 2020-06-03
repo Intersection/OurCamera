@@ -11,22 +11,25 @@ Example usage:
 """
 import json
 import urllib
+import requests
 import threading
 import logging
 import datetime
 import argparse
 from argparse import RawTextHelpFormatter
-import os;
+import os
 from multiprocessing import Pool, TimeoutError
 import boto3
 from botocore.stub import Stubber
 import datetime
 import botocore
-import  time
+import time
 import errno
 
 DOT_CAMERA_LIST_URL = "https://webcams.nyctmc.org/new-data.php?query="
+# DOT_CAMERA_LIST_URL = "https://dotsignals.org/new-data.php?query="
 DOT_CAMERA_ID_URL = "https://webcams.nyctmc.org/google_popup.php?cid="
+# DOT_CAMERA_ID_URL = "https://dotsignals.org/google_popup.php?cid="
 saveDirectory = "/tmp/rawimages/"
 outDirectory = "/tmp/preprocessed/"
 BUCKET = "intersection-ourcamera"
@@ -36,6 +39,17 @@ save_to_aws = True
 ACCESS_KEY = ""
 SECRET_KEY = ""
 
+log = logging.getLogger(__name__)
+log.setLevel('DEBUG')
+
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# Temporary fix to alleviate SSL not updated on the server side
+VERIFY_SSL_CERT = False
+
+
 class CameraObject:
     cameraId = None
     locationId = None
@@ -43,22 +57,36 @@ class CameraObject:
     longitude = None
     name = None
 
+
 def saveFile(cameraObject):
     assert isinstance(cameraObject, CameraObject)
     cameraId = cameraObject.cameraId
     url = "http://207.251.86.238/cctv"
     append = ".jpg?math=0.011125243364920934"
     fileName = SaveImages().getStringFormat(cameraObject)
-    filePath = saveDirectory+fileName
+    filePath = saveDirectory + fileName
     urlToSave = url + str(cameraId) + append
-    urllib.urlretrieve(urlToSave, filePath)
-    if (os.path.getsize(filePath) < 11000):
-        os.remove(filePath)
+    log.info("trying to download" + urlToSave)
+
+    VALID_IMG_CONTENT_SIZE = 11000
+    try:
+        img_content = requests.get(urlToSave)
+    except:
+        log.exception(f"Couldn't GET image with  url={urlToSave}")
     else:
-        SaveImages().saveFileToS3(filePath,fileName,"raw",outDirectory+"/"+fileName,ACCESS_KEY,SECRET_KEY)
+        if len(img_content.content) > VALID_IMG_CONTENT_SIZE:
+            try:
+                with open(filePath, 'wb') as f:
+                    f.write(img_content.content)
+            except:
+                logging.exception(f"Couldn't write image content to file={filePath}")
+                raise
+            else:
+                SaveImages().saveFileToS3(filePath, fileName, "raw", outDirectory + "/" + fileName, ACCESS_KEY,
+                                          SECRET_KEY)
+
 
 class SaveImages:
-
     class RenameAfterUpload(object):
         def __init__(self, currentFilePath, nextFilePath):
             self._currentFilePath = currentFilePath
@@ -68,7 +96,6 @@ class SaveImages:
             self._lock = threading.Lock()
 
         def __call__(self, bytes_amount):
-
             with self._lock:
                 self._seen_so_far += bytes_amount
                 percentage = (self._seen_so_far / self._size) * 100
@@ -83,68 +110,84 @@ class SaveImages:
             self._lock = threading.Lock()
 
         def __call__(self, bytes_amount):
-
             with self._lock:
                 self._seen_so_far += bytes_amount
                 percentage = (self._seen_so_far / self._size) * 100
                 if percentage == 100.0:
                     os.remove(self._currentFilePath)
 
-    def renameFunction(self,filePath,nextFilePath):
+    def renameFunction(self, filePath, nextFilePath):
         os.rename(filePath, nextFilePath)
 
-    def saveFileToS3(self,filePath, fileName,s3BaseDirectory,renamedFilePathOnSuccess,key,secret):
+    def saveFileToS3(self, filePath, fileName, s3BaseDirectory, renamedFilePathOnSuccess, key, secret):
         if not save_to_aws:
             return
         s3 = boto3.client('s3',
-            aws_access_key_id = key,
-            aws_secret_access_key = secret
-        )
+                          aws_access_key_id=key,
+                          aws_secret_access_key=secret
+                          )
         try:
             if renamedFilePathOnSuccess:
-                s3.upload_file(filePath, BUCKET, s3BaseDirectory + "/" +SaveImages().getS3Path(fileName),
-                           Callback=self.RenameAfterUpload(filePath,renamedFilePathOnSuccess))
+                s3.upload_file(filePath, BUCKET, s3BaseDirectory + "/" + SaveImages().getS3Path(fileName),
+                               Callback=self.RenameAfterUpload(filePath, renamedFilePathOnSuccess))
             else:
                 s3.upload_file(filePath, BUCKET, s3BaseDirectory + "/" + SaveImages().getS3Path(fileName),
                                Callback=self.DeleteAfterUpload(filePath))
 
         except Exception as e:
-            print("Filepath is "+filePath)
-            print("fileName is "+fileName)
-            print("s3Directory "+s3BaseDirectory)
-            print("exception is "+str(e))
+            log.info("Filepath is " + filePath)
+            log.info("fileName is " + fileName)
+            log.info("s3Directory " + s3BaseDirectory)
+            log.info("exception is " + str(e))
 
-    def getS3Path(self,fileName):
+    def getS3Path(self, fileName):
         now = datetime.datetime.now()
-        return str(now.year)+"/"+str(now.month)+"/"+str(now.day)+"/"+str(now.hour)+"/"+fileName
+        return str(now.year) + "/" + str(now.month) + "/" + str(now.day) + "/" + str(now.hour) + "/" + fileName
 
-    def getStringFormat(self,cameraObject):
+    def getStringFormat(self, cameraObject):
         epoch = datetime.datetime.now().strftime("%s")
-        return str(cameraObject.cameraId) + "_" +str(cameraObject.locationId) + "_" + str(epoch) + ".jpg"
+        return str(cameraObject.cameraId) + "_" + str(cameraObject.locationId) + "_" + str(epoch) + ".jpg"
 
-    def download_dot_files(self,pool,cameraObjects):
-        print("download_dot_files")
-        pool.map(saveFile, cameraObjects)
+    def download_dot_files(self, pool, cameraObjects):
+        log.info("download_dot_files")
+        try:
+            pool.map(saveFile, cameraObjects)
+        except:
+            log.info("failed creating map")
+            pool.join()
+            pool.close()
 
     def getDOTLocationMapAsJson(self):
         try:
-            return json.loads(urllib.urlopen(DOT_CAMERA_LIST_URL).read())
+            resp = requests.get(DOT_CAMERA_LIST_URL, verify=VERIFY_SSL_CERT)
         except:
-            print("FAILED First version")
+            log.exception(f"Coudln't make GET request to url={DOT_CAMERA_LIST_URL}")
+            log.info("FAILED First version")
+            raise
+        else:
+            if resp.status_code != 200:
+                log.exception(f"Response code for url={DOT_CAMERA_LIST_URL} is={resp.status_code} - not OK")
+                raise requests.RequestException(f"Bad status code for GET request to url={DOT_CAMERA_LIST_URL}")
 
-    def getDOTCameraIdForLocationId(self,locationId):
-        page = urllib.urlopen(DOT_CAMERA_ID_URL+str(locationId)).read()
+            return resp.json()
+
+    def getDOTCameraIdForLocationId(self, locationId):
+        page = requests.get(DOT_CAMERA_ID_URL + str(locationId), verify=VERIFY_SSL_CERT).text
         cameraId = page.find(".jpg")
-        for i in range(0,5):
-            if page[cameraId-i]=="v":
-                return int(page[cameraId-i+1:cameraId])
+        log.info(f'CameraId={cameraId}')
+        for i in range(0, 5):
+            if page[cameraId - i] == "v":
+                return int(page[cameraId - i + 1:cameraId])
 
     def getCameraObjectsWithoutCameraId(self):
         cameraObjectsWithoutCameraId = []
         i = 0
-        for marker in self.getDOTLocationMapAsJson()["markers"]:
-            i +=1
-            if i>NUMBER_FILES_DOWNLOAD_LIMIT:
+        loc_markers = self.getDOTLocationMapAsJson()["markers"]
+        log.info(f"Got {len(loc_markers)} camera locations withought ID to fill")
+        for marker in loc_markers:
+            i += 1
+            if i > NUMBER_FILES_DOWNLOAD_LIMIT:
+                log.info(f"Got more than {NUMBER_FILES_DOWNLOAD_LIMIT} cameras to work with. Exiting.")
                 return cameraObjectsWithoutCameraId
             cameraObject = CameraObject()
             cameraObject.locationId = marker["id"]
@@ -154,25 +197,24 @@ class SaveImages:
             cameraObjectsWithoutCameraId.append(cameraObject)
         return cameraObjectsWithoutCameraId
 
-
-    def fillCameraObjectsWithCameraId(self,cameraObjectsWithoutCameraIds):
+    def fillCameraObjectsWithCameraId(self, cameraObjectsWithoutCameraIds):
         i = 0
         total = len(cameraObjectsWithoutCameraIds)
         for cameraObject in cameraObjectsWithoutCameraIds:
-            i +=1
-            cameraObject.cameraId =self.getDOTCameraIdForLocationId(cameraObject.locationId)
-            logging.warn("Filling "+str(i)+" of total "+str(total))
-        return cameraObjectsWithoutCameraIds #now filled with cameraIds
+            i += 1
+            cameraObject.cameraId = self.getDOTCameraIdForLocationId(cameraObject.locationId)
+            log.warn("Filling " + str(i) + " of total " + str(total))
+        return cameraObjectsWithoutCameraIds  # now filled with cameraIds
 
-    def getJSONStringFromObject(self,cameraObjects):
+    def getJSONStringFromObject(self, cameraObjects):
         return json.dumps(cameraObjects.__dict__)
 
-    def returnTrueToDownloadMoreImages(self,numberFilesDownloadPoint):
-        if len([name for name in os.listdir(saveDirectory)])<numberFilesDownloadPoint:
+    def returnTrueToDownloadMoreImages(self, numberFilesDownloadPoint):
+        if len([name for name in os.listdir(outDirectory)]) < numberFilesDownloadPoint:
             return True
         return False
 
-    def getTimestampAndLocationId(self,testPath):
+    def getTimestampAndLocationId(self, testPath):
         try:
             splits = testPath.split("_")
             if (len(splits) > 0):
@@ -183,16 +225,16 @@ class SaveImages:
             return 0, 0
         return 0, 0
 
-    def saveObjectsToFile(self,filePath,objectsToSave):
+    def saveObjectsToFile(self, filePath, objectsToSave):
         with open(filePath, 'w') as outfile:
             json.dump([ob.__dict__ for ob in objectsToSave], outfile)
-        self.saveFileToS3(filePath,"cameraobjects","map","",ACCESS_KEY,SECRET_KEY)
+        self.saveFileToS3(filePath, "cameraobjects", "map", "", ACCESS_KEY, SECRET_KEY)
 
     def makeSureDirectoriesExist(self):
         self.mkdir_p(saveDirectory)
         self.mkdir_p(outDirectory)
 
-    def mkdir_p(self,path):
+    def mkdir_p(self, path):
         try:
             os.makedirs(path)
         except OSError as exc:  # Python >2.5
@@ -201,22 +243,31 @@ class SaveImages:
             else:
                 raise
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Save images', formatter_class=RawTextHelpFormatter)
-    parser.add_argument('-access_key', help='aws access key')
-    parser.add_argument('-secret_key', help='aws secret key')
+    parser.add_argument('--access_key', help='aws access key')
+    parser.add_argument('--secret_key', help='aws secret key')
     args = parser.parse_args()
     ACCESS_KEY = args.access_key
     SECRET_KEY = args.secret_key
-    SaveImages().makeSureDirectoriesExist();
-    pool = Pool(processes=20)              # start 4 worker processes
-    cameraObjects = SaveImages().fillCameraObjectsWithCameraId(SaveImages().getCameraObjectsWithoutCameraId())
-    SaveImages().saveObjectsToFile("/tmp/objects.json",cameraObjects)
-    SaveImages().download_dot_files(pool,cameraObjects)
-    while (True):
-        if SaveImages().returnTrueToDownloadMoreImages(MAX_FILES_TO_DOWNLOAD):
-            SaveImages().download_dot_files(pool,cameraObjects)
-        else:
-            time.sleep(1.0)
+    SaveImages().makeSureDirectoriesExist()
 
+    # TODO: Substitute multiprocessing with async / greenlets programming
+    pool = Pool(processes=20)  # start 4 worker processes
+    cameraObjects = SaveImages().fillCameraObjectsWithCameraId(SaveImages().getCameraObjectsWithoutCameraId())
+    log.info("cameraObjects " + str(cameraObjects))
+    SaveImages().saveObjectsToFile("/tmp/objects.json", cameraObjects)
+    SaveImages().download_dot_files(pool, cameraObjects)
+    while (True):
+        try:
+            if SaveImages().returnTrueToDownloadMoreImages(MAX_FILES_TO_DOWNLOAD):
+                SaveImages().download_dot_files(pool, cameraObjects)
+            else:
+                log.info("sleeping")
+                time.sleep(10.0)
+        except:
+            pool.close()
+            pool.join()
+            break
