@@ -88,6 +88,7 @@ def saveFile(cameraObject):
             try:
                 with open(filePath, 'wb') as f:
                     f.write(img_content.content)
+                    log.info(f'Wrote {len(img_content.content)} bytes to {filePath}')
             except:
                 logging.exception(f"Couldn't write image content to file={filePath}")
                 raise
@@ -136,19 +137,19 @@ class SaveImages:
                           aws_access_key_id=key,
                           aws_secret_access_key=secret
                           )
+
+        s3path = s3BaseDirectory + "/" + SaveImages().getS3Path(fileName)
         try:
             if renamedFilePathOnSuccess:
-                s3.upload_file(filePath, BUCKET, s3BaseDirectory + "/" + SaveImages().getS3Path(fileName),
+                s3.upload_file(filePath, BUCKET, s3path,
                                Callback=self.RenameAfterUpload(filePath, renamedFilePathOnSuccess))
             else:
-                s3.upload_file(filePath, BUCKET, s3BaseDirectory + "/" + SaveImages().getS3Path(fileName),
+                s3.upload_file(filePath, BUCKET, s3path,
                                Callback=self.DeleteAfterUpload(filePath))
-
         except Exception as e:
-            log.info("Filepath is " + filePath)
-            log.info("fileName is " + fileName)
-            log.info("s3Directory " + s3BaseDirectory)
-            log.info("exception is " + str(e))
+            log.exception(f"Couldn't upload {filePath} to s3://{BUCKET}/{s3path}")
+        else:
+            log.info(f"Wrote {fileName} to s3://{BUCKET}/{s3path}; renamed={renamedFilePathOnSuccess}")
 
     def getS3Path(self, fileName):
         now = datetime.datetime.now()
@@ -267,7 +268,7 @@ if __name__ == '__main__':
     # TODO: Substitute multiprocessing with async / greenlets programming
     pool = Pool(processes=20)  # start 4 worker processes
     cameraObjects = SaveImages().fillCameraObjectsWithCameraId(SaveImages().getCameraObjectsWithoutCameraId())
-    log.info("cameraObjects " + str(cameraObjects))
+    # log.info("cameraObjects " + str(cameraObjects))
     SaveImages().saveObjectsToFile("/tmp/objects.json", cameraObjects)
     SaveImages().download_dot_files(pool, cameraObjects)
     while (True):
