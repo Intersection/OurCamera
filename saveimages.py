@@ -10,21 +10,19 @@ Example usage:
     python saveimages.py
 """
 import json
-import urllib
 import requests
 import threading
 import logging
-import datetime
 import argparse
 from argparse import RawTextHelpFormatter
 import os
-from multiprocessing import Pool, TimeoutError
+from multiprocessing import Pool
 import boto3
-from botocore.stub import Stubber
 import datetime
-import botocore
 import time
 import errno
+import urllib3
+
 
 DOT_CAMERA_LIST_URL = "https://webcams.nyctmc.org/new-data.php?query="
 # DOT_CAMERA_LIST_URL = "https://dotsignals.org/new-data.php?query="
