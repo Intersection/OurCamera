@@ -42,7 +42,6 @@ SECRET_KEY = ""
 log = logging.getLogger(__name__)
 log.setLevel('DEBUG')
 
-import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -51,11 +50,18 @@ VERIFY_SSL_CERT = False
 
 
 class CameraObject:
-    cameraId = None
-    locationId = None
-    latitude = None
-    longitude = None
-    name = None
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.cameraId = None
+        self.locationId = None
+        self.latitude = None
+        self.longitude = None
+        self.name = None
+
+    def __repr__(self):
+        return f"{self.name} [{self.cameraId}:{self.locationId}] (lat={self.latitude}, lon={self.longitude})"
 
 
 def saveFile(cameraObject):
