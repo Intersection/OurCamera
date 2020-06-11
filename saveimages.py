@@ -37,6 +37,12 @@ save_to_aws = True
 ACCESS_KEY = ""
 SECRET_KEY = ""
 
+logging.basicConfig(
+    format='{asctime} {levelname}: {message} {pathname}:{lineno}',
+    style='{',
+    level=os.getenv('LOGLEVEL', 'INFO')
+)
+
 log = logging.getLogger(__name__)
 log.setLevel('DEBUG')
 
