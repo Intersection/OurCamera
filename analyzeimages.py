@@ -194,7 +194,7 @@ class AnalyzeImages:
                                 line_thickness=2)
                             print("save_directory "+save_directory)
                             print("testpath " + testpath)
-                            scipy.misc.imsave(save_directory +"/"+ testpath, image_np)
+                            Image.fromarray(image_np).save(save_directory + "/" + testpath)
                             self.saveAnnotatedImage(testpath,save_directory +"/"+ testpath,"annotated")
                         os.remove(path_images_dir + '/' + testpath)
 
