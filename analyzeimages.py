@@ -113,15 +113,15 @@ class AnalyzeImages:
                 detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
                 num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
-                while (True):
+                while True:
                     for testpath in os.listdir(path_images_dir):
                         start_time = time.time()
-                        timestamp, locationId = SaveImages().getTimestampAndLocationId(testpath)
+                        timestamp, location_id = SaveImages().getTimestampAndLocationId(testpath)
                         if timestamp == 0:
                             os.remove(path_images_dir + "/" + testpath)
                             continue
-                        numCars = 0
-                        numTrucks = 0
+                        num_cars = 0
+                        num_trucks = 0
                         num_people = 0
 
                         try:
@@ -148,29 +148,27 @@ class AnalyzeImages:
                         boxes = np.squeeze(boxes)
                         for i in range(boxes.shape[0]):
                             if scores[i] > DETECTION_LIMIT:
-                                box = tuple(boxes[i].tolist())
-
                                 classes = np.squeeze(classes).astype(np.int32)
                                 if classes[i] in category_index.keys():
                                     class_name = category_index[classes[i]]['name']
                                     if class_name == 'car':
-                                        numCars = numCars + 1;
+                                        num_cars = num_cars + 1
                                     elif class_name == 'truck':
-                                        numTrucks = numTrucks + 1;
+                                        num_trucks = num_trucks + 1
                                     elif class_name == 'pedestrian':
                                         num_people += 1
 
-                        trafficResults = TrafficResult()
-                        trafficResults.numberCars = numCars
-                        trafficResults.numberTrucks = numTrucks
-                        trafficResults.timestamp = timestamp
-                        trafficResults.cameraLocationId = locationId
-                        trafficResults.numPeople = num_people
-                        self.logTrafficResult(trafficResults)
+                        traffic_results = TrafficResult()
+                        traffic_results.numberCars = num_cars
+                        traffic_results.numberTrucks = num_trucks
+                        traffic_results.timestamp = timestamp
+                        traffic_results.cameraLocationId = location_id
+                        traffic_results.numPeople = num_people
+                        self.logTrafficResult(traffic_results)
 
                         print("Process Time " + str(time.time() - start_time))
-                        print(f"There are {numCars} cars, {numTrucks} trucks/others and {num_people} people")
-                        if (random.randint(0, 100) == 1):
+                        print(f"There are {num_cars} cars, {num_trucks} trucks/others and {num_people} people")
+                        if random.randint(0, 100) == 1:
                             # Visualization of the results of a detection.
                             vis_util.visualize_boxes_and_labels_on_image_array(
                                 image_np,
