@@ -202,7 +202,6 @@ if __name__ == '__main__':
     parser.add_argument('-access_key', help='aws access key')
     parser.add_argument('-secret_key', help='aws secret key')
     args = parser.parse_args()
-    SaveImages().mkdir_p(args.save_directory)
     ACCESS_KEY = args.access_key
     SECRET_KEY = args.secret_key
     AnalyzeImages().processimages(args.path_images,args.path_labels_map,args.save_directory)
