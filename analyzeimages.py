@@ -175,7 +175,7 @@ class AnalyzeImages:
                         traffic_results.numberTrucks = num_trucks
                         traffic_results.timestamp = timestamp
                         traffic_results.cameraLocationId = location_id
-                        traffic_results.numPeople = num_people
+                        traffic_results.numberPeople = num_people
                         self.log_traffic_result(traffic_results)
 
                         log.debug(f"Process Time={str(time.time() - start_time)}")
