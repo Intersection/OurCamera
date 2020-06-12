@@ -11,11 +11,10 @@ Example usage:
         -save_directory /tmp/processed
 """
 import random
-import numpy as np
-from saveimages import *
-import os
-import tensorflow as tf
 import sys
+import numpy as np
+import tensorflow as tf
+from saveimages import *
 
 # TODO: Find another way to include object_detection package
 sys.path.append('./models-master/research/')
