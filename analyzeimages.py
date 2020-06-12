@@ -63,15 +63,15 @@ class AnalyzeImages:
                                                                     use_display_name=True)
         return label_map_util.create_category_index(categories)
 
-    def load_image_into_numpy_array(self,imageconvert):
+    def load_image_into_numpy_array(self, imageconvert):
         (im_width, im_height) = imageconvert.size
         try:
             return np.array(imageconvert.getdata()).reshape((im_height, im_width, 3)).astype(np.uint8)
         except ValueError:
             return np.array([])
 
-    def saveAnnotatedImage(self,fileName,filePath,s3directory):
-        return SaveImages().saveFileToS3(filePath,fileName,s3directory,False,ACCESS_KEY,SECRET_KEY)
+    def saveAnnotatedImage(self, fileName, filePath, s3directory):
+        return SaveImages().saveFileToS3(filePath, fileName, s3directory, False, ACCESS_KEY, SECRET_KEY)
 
     def get_database_instance(self):
         if self._table is not None:
@@ -93,14 +93,14 @@ class AnalyzeImages:
         self.get_database_instance().put_item(
             Item={
                 'timestamp': str(trafficResult.timestamp) + ":" + str(trafficResult.cameraLocationId),
-                'cameraLocationId':trafficResult.cameraLocationId,
+                'cameraLocationId': trafficResult.cameraLocationId,
                 'cars': trafficResult.numberCars,
                 'trucks': trafficResult.numberTrucks,
                 'people': trafficResult.numberTrucks
             }
         )
 
-    def processimages(self,path_images_dir, path_labels_map,save_directory):
+    def processimages(self, path_images_dir, path_labels_map, save_directory):
         detection_graph = self.createGraph()
         category_index = AnalyzeImages.create_category_index(path_labels_map)
 
@@ -112,12 +112,12 @@ class AnalyzeImages:
                 detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
                 num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
-                while(True):
+                while (True):
                     for testpath in os.listdir(path_images_dir):
                         start_time = time.time()
-                        timestamp,locationId = SaveImages().getTimestampAndLocationId(testpath)
+                        timestamp, locationId = SaveImages().getTimestampAndLocationId(testpath)
                         if timestamp == 0:
-                            os.remove(path_images_dir +"/"+ testpath)
+                            os.remove(path_images_dir + "/" + testpath)
                             continue
                         numCars = 0
                         numTrucks = 0
@@ -127,13 +127,13 @@ class AnalyzeImages:
                             with Image.open(path_images_dir + '/' + testpath) as image:
                                 image_np = self.load_image_into_numpy_array(image)
                         except IOError:
-                            print("Issue opening "+testpath)
-                            os.remove(path_images_dir + testpath)
+                            print("Issue opening " + testpath)
+                            os.remove(path_images_dir + '/' + testpath)
                             continue
 
                         if image_np.size == 0:
-                            print("Skipping image "+testpath)
-                            os.remove(path_images_dir + testpath)
+                            print("Skipping image " + testpath)
+                            os.remove(path_images_dir + '/' + testpath)
                             continue
 
                         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
@@ -153,9 +153,9 @@ class AnalyzeImages:
                                 if classes[i] in category_index.keys():
                                     class_name = category_index[classes[i]]['name']
                                     if class_name == 'car':
-                                        numCars=numCars+1;
+                                        numCars = numCars + 1;
                                     elif class_name == 'truck':
-                                        numTrucks=numTrucks+1;
+                                        numTrucks = numTrucks + 1;
                                     elif class_name == 'pedestrian':
                                         num_people += 1
 
@@ -163,13 +163,13 @@ class AnalyzeImages:
                         trafficResults.numberCars = numCars
                         trafficResults.numberTrucks = numTrucks
                         trafficResults.timestamp = timestamp
-                        trafficResults.cameraLocationId =locationId
+                        trafficResults.cameraLocationId = locationId
                         trafficResults.numPeople = num_people
                         self.logTrafficResult(trafficResults)
 
                         print("Process Time " + str(time.time() - start_time))
                         print(f"There are {numCars} cars, {numTrucks} trucks/others and {num_people} people")
-                        if (random.randint(0,100)==1):
+                        if (random.randint(0, 100) == 1):
                             # Visualization of the results of a detection.
                             vis_util.visualize_boxes_and_labels_on_image_array(
                                 image_np,
@@ -180,11 +180,11 @@ class AnalyzeImages:
                                 min_score_thresh=0.4,
                                 use_normalized_coordinates=True,
                                 line_thickness=2)
-                            print("save_directory "+save_directory)
+                            print("save_directory " + save_directory)
                             print("testpath " + testpath)
                             Image.fromarray(image_np).save(save_directory + "/" + testpath)
-                            self.saveAnnotatedImage(testpath,save_directory +"/"+ testpath,"annotated")
-                        os.remove(path_images_dir + '/' + testpath)
+                            self.saveAnnotatedImage(testpath, save_directory + "/" + testpath, "annotated")
+                            os.remove(path_images_dir + '/' + testpath)
 
 
 if __name__ == '__main__':
@@ -201,4 +201,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     ACCESS_KEY = args.access_key
     SECRET_KEY = args.secret_key
-    AnalyzeImages().processimages(args.path_images,args.path_labels_map,args.save_directory)
+    AnalyzeImages().processimages(args.path_images, args.path_labels_map, args.save_directory)
