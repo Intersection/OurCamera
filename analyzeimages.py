@@ -87,17 +87,17 @@ class AnalyzeImages:
         self._table = dynamodb.Table('ourcamera')
         return self._table
 
-    def logTrafficResult(self, trafficResult):
+    def log_traffic_result(self, traffic_result):
         if not save_to_aws:
             return
-        assert isinstance(trafficResult, TrafficResult)
+        assert isinstance(traffic_result, TrafficResult)
         self.get_database_instance().put_item(
             Item={
-                'timestamp': str(trafficResult.timestamp) + ":" + str(trafficResult.cameraLocationId),
-                'cameraLocationId': trafficResult.cameraLocationId,
-                'cars': trafficResult.numberCars,
-                'trucks': trafficResult.numberTrucks,
-                'people': trafficResult.numberTrucks
+                'timestamp': str(traffic_result.timestamp) + ":" + str(traffic_result.cameraLocationId),
+                'cameraLocationId': traffic_result.cameraLocationId,
+                'cars': traffic_result.numberCars,
+                'trucks': traffic_result.numberTrucks,
+                'people': traffic_result.numberTrucks
             }
         )
 
@@ -164,7 +164,7 @@ class AnalyzeImages:
                         traffic_results.timestamp = timestamp
                         traffic_results.cameraLocationId = location_id
                         traffic_results.numPeople = num_people
-                        self.logTrafficResult(traffic_results)
+                        self.log_traffic_result(traffic_results)
 
                         print("Process Time " + str(time.time() - start_time))
                         print(f"There are {num_cars} cars, {num_trucks} trucks/others and {num_people} people")
