@@ -15,7 +15,7 @@ class TestAnalyzeImages(unittest.TestCase):
         pass
 
     def test_setup_tensorflow(self):
-        graph = AnalyzeImages().create_graph()
+        graph = AnalyzeImages.create_graph()
         assert graph.__class__.__name__ == "Graph"
         assert graph != None
 
