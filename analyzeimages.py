@@ -70,7 +70,8 @@ class AnalyzeImages:
         except ValueError:
             return np.array([])
 
-    def save_annotated_image(self, file_name, file_path, s3directory):
+    @staticmethod
+    def save_annotated_image(file_name, file_path, s3directory):
         return SaveImages().saveFileToS3(file_path, file_name, s3directory, False, ACCESS_KEY, SECRET_KEY)
 
     def get_database_instance(self):
@@ -183,7 +184,7 @@ class AnalyzeImages:
                             print("save_directory " + save_directory)
                             print("testpath " + testpath)
                             Image.fromarray(image_np).save(save_directory + "/" + testpath)
-                            self.save_annotated_image(testpath, save_directory + "/" + testpath, "annotated")
+                            AnalyzeImages.save_annotated_image(testpath, save_directory + "/" + testpath, "annotated")
                             os.remove(path_images_dir + '/' + testpath)
 
 
