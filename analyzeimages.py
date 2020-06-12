@@ -41,7 +41,7 @@ class AnalyzeImages:
     def __init__(self):
         self._table = None
 
-    def createGraph(self):
+    def create_graph(self):
         pathcpkt = './faster_rcnn_resnet50_coco_2018_01_28/frozen_inference_graph.pb'
 
         with tf.device('/gpu:1'):
@@ -102,7 +102,7 @@ class AnalyzeImages:
         )
 
     def processimages(self, path_images_dir, path_labels_map, save_directory):
-        detection_graph = self.createGraph()
+        detection_graph = self.create_graph()
         category_index = AnalyzeImages.create_category_index(path_labels_map)
 
         with detection_graph.as_default():
