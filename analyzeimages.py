@@ -15,6 +15,7 @@ import sys
 import numpy as np
 import tensorflow as tf
 from saveimages import *
+from PIL import Image
 
 # TODO: Find another way to include object_detection package
 sys.path.append('./models-master/research/')
@@ -23,8 +24,6 @@ from object_detection.utils import label_map_util, visualization_utils as vis_ut
 
 ACCESS_KEY = ""
 SECRET_KEY = ""
-
-from PIL import Image
 
 DETECTION_LIMIT = .4
 
