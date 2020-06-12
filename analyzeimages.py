@@ -189,10 +189,13 @@ class AnalyzeImages:
                             self.saveAnnotatedImage(testpath,save_directory +"/"+ testpath,"annotated")
                         os.remove(path_images_dir + '/' + testpath)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Analyze traffic images to determine rate of blocking bike'
-                    'and bus lanes', formatter_class=RawTextHelpFormatter)
+        description='Analyze traffic images to determine rate of blocking bike and bus lanes',
+        formatter_class=RawTextHelpFormatter
+    )
+
     parser.add_argument('-path_images', help='the folder with all the downloaded images in it')
     parser.add_argument('-path_labels_map', help='the file with the integer to label map')
     parser.add_argument('-save_directory', help='the directory you want to save the annotated images to')
