@@ -84,7 +84,7 @@ class AnalyzeImages:
             region_name="us-east-1"
         )
         dynamodb = session.resource('dynamodb')
-        self._table = dynamodb.Table('ourcamera')
+        self._table = dynamodb.Table('ourcamera_v2')
         return self._table
 
     def log_traffic_result(self, traffic_result):
