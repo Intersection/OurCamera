@@ -49,8 +49,8 @@ class TrafficResult:
     numberTrucks = 0
 
 class AnalyzeImages:
-    global table
-    table = None
+    def __init__(self):
+        self._table = None
 
     def createGraph(self):
         pathcpkt = './faster_rcnn_resnet50_coco_2018_01_28/frozen_inference_graph.pb'
@@ -81,24 +81,24 @@ class AnalyzeImages:
     def saveAnnotatedImage(self,fileName,filePath,s3directory):
         return SaveImages().saveFileToS3(filePath,fileName,s3directory,False,ACCESS_KEY,SECRET_KEY)
 
-    def getDatabaseInstance(self):
-        global table
-        if table != None:
-            return table
+    def get_database_instance(self):
+        if self._table is not None:
+            return self._table
+
         session = boto3.Session(
             aws_access_key_id=ACCESS_KEY,
             aws_secret_access_key=SECRET_KEY,
             region_name="us-east-1"
         )
         dynamodb = session.resource('dynamodb')
-        table = dynamodb.Table('ourcamera')
-        return table
+        self._table = dynamodb.Table('ourcamera')
+        return self._table
 
     def logTrafficResult(self, trafficResult):
         if not save_to_aws:
             return
         assert isinstance(trafficResult, TrafficResult)
-        self.getDatabaseInstance().put_item(
+        self.get_database_instance().put_item(
             Item={
                 'timestamp': str(trafficResult.timestamp),
                 'cameraLocationId':trafficResult.cameraLocationId,
