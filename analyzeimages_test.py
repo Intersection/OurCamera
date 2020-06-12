@@ -20,7 +20,7 @@ class TestAnalyzeImages(unittest.TestCase):
         assert graph != None
 
     def test_create_category_index(self):
-        category_index = AnalyzeImages().createCategoryIndex("./test.pbtxt")
+        category_index = AnalyzeImages.create_category_index("./test.pbtxt")
         assert category_index.__class__.__name__ == "dict"
         assert 1 in category_index
         assert "name" in category_index[1]
