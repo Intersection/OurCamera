@@ -47,6 +47,8 @@ class TrafficResult:
     cameraLocationId = 0
     numberCars = 0
     numberTrucks = 0
+    numberPeople = 0
+
 
 class AnalyzeImages:
     def __init__(self):
@@ -105,7 +107,8 @@ class AnalyzeImages:
                 'timestamp': str(trafficResult.timestamp),
                 'cameraLocationId':trafficResult.cameraLocationId,
                 'cars': trafficResult.numberCars,
-                'trucks': trafficResult.numberTrucks
+                'trucks': trafficResult.numberTrucks,
+                'people': trafficResult.numberTrucks
             }
         )
 
@@ -130,6 +133,7 @@ class AnalyzeImages:
                             continue
                         numCars = 0
                         numTrucks = 0
+                        num_people = 0
 
                         try:
                             image = Image.open(path_images_dir + '/' + testpath)
@@ -164,16 +168,19 @@ class AnalyzeImages:
                                         numCars=numCars+1;
                                     elif class_name == 'truck':
                                         numTrucks=numTrucks+1;
+                                    elif class_name == 'pedestrian':
+                                        num_people += 1
 
                         trafficResults = TrafficResult()
                         trafficResults.numberCars = numCars
                         trafficResults.numberTrucks = numTrucks
                         trafficResults.timestamp = timestamp
                         trafficResults.cameraLocationId =locationId
+                        trafficResults.numPeople = num_people
                         self.logTrafficResult(trafficResults)
 
                         print("Process Time " + str(time.time() - start_time))
-                        print("There are "+str(numCars)+" cars and "+str(numTrucks)+" trucks/others");
+                        print(f"There are {numCars} cars, {numTrucks} trucks/others and {num_people} people")
                         if (random.randint(0,100)==1):
                             # Visualization of the results of a detection.
                             vis_util.visualize_boxes_and_labels_on_image_array(
