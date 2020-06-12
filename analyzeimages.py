@@ -124,8 +124,8 @@ class AnalyzeImages:
                         num_people = 0
 
                         try:
-                            image = Image.open(path_images_dir + '/' + testpath)
-                            image_np = self.load_image_into_numpy_array(image)
+                            with Image.open(path_images_dir + '/' + testpath) as image:
+                                image_np = self.load_image_into_numpy_array(image)
                         except IOError:
                             print("Issue opening "+testpath)
                             os.remove(path_images_dir + testpath)
