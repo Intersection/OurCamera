@@ -27,6 +27,15 @@ SECRET_KEY = ""
 
 DETECTION_LIMIT = .4
 
+logging.basicConfig(
+    format='{asctime} {levelname}: {message} {pathname}:{lineno}',
+    style='{',
+    level=os.getenv('LOGLEVEL', 'INFO')
+)
+
+log = logging.getLogger(__name__)
+log.setLevel('DEBUG')
+
 
 class TrafficResult:
     timestamp = 0
@@ -91,15 +100,17 @@ class AnalyzeImages:
         if not save_to_aws:
             return
         assert isinstance(traffic_result, TrafficResult)
+        item = {
+            'timestamp': str(traffic_result.timestamp),
+            'cameraLocationId': str(traffic_result.cameraLocationId),
+            'cars': traffic_result.numberCars,
+            'trucks': traffic_result.numberTrucks,
+            'people': traffic_result.numberPeople
+        }
         self.get_database_instance().put_item(
-            Item={
-                'timestamp': str(traffic_result.timestamp) + ":" + str(traffic_result.cameraLocationId),
-                'cameraLocationId': traffic_result.cameraLocationId,
-                'cars': traffic_result.numberCars,
-                'trucks': traffic_result.numberTrucks,
-                'people': traffic_result.numberPeople
-            }
+            Item=item
         )
+        log.info(f"Put item={item} to table")
 
     def processimages(self, path_images_dir, path_labels_map, save_directory):
         detection_graph = AnalyzeImages.create_graph()
@@ -124,17 +135,18 @@ class AnalyzeImages:
                         num_trucks = 0
                         num_people = 0
 
+                        dir_testpath = path_images_dir + '/' + testpath
                         try:
-                            with Image.open(path_images_dir + '/' + testpath) as image:
+                            with Image.open(dir_testpath) as image:
                                 image_np = AnalyzeImages.load_image_into_numpy_array(image)
                         except IOError:
-                            print("Issue opening " + testpath)
-                            os.remove(path_images_dir + '/' + testpath)
+                            log.exception(f"Issue opening directory={dir_testpath}")
+                            os.remove(dir_testpath)
                             continue
 
                         if image_np.size == 0:
-                            print("Skipping image " + testpath)
-                            os.remove(path_images_dir + '/' + testpath)
+                            log.info("Skipping image=" + testpath)
+                            os.remove(dir_testpath)
                             continue
 
                         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
@@ -166,8 +178,7 @@ class AnalyzeImages:
                         traffic_results.numPeople = num_people
                         self.log_traffic_result(traffic_results)
 
-                        print("Process Time " + str(time.time() - start_time))
-                        print(f"There are {num_cars} cars, {num_trucks} trucks/others and {num_people} people")
+                        log.debug(f"Process Time={str(time.time() - start_time)}")
                         if random.randint(0, 100) == 1:
                             # Visualization of the results of a detection.
                             vis_util.visualize_boxes_and_labels_on_image_array(
@@ -179,11 +190,11 @@ class AnalyzeImages:
                                 min_score_thresh=0.4,
                                 use_normalized_coordinates=True,
                                 line_thickness=2)
-                            print("save_directory " + save_directory)
-                            print("testpath " + testpath)
+                            log.info(f"save_directory={save_directory}")
+                            log.info(f"testpath={testpath}")
                             Image.fromarray(image_np).save(save_directory + "/" + testpath)
                             AnalyzeImages.save_annotated_image(testpath, save_directory + "/" + testpath, "annotated")
-                            os.remove(path_images_dir + '/' + testpath)
+                            os.remove(dir_testpath)
 
 
 if __name__ == '__main__':
