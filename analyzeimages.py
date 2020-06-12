@@ -97,7 +97,7 @@ class AnalyzeImages:
                 'cameraLocationId': traffic_result.cameraLocationId,
                 'cars': traffic_result.numberCars,
                 'trucks': traffic_result.numberTrucks,
-                'people': traffic_result.numberTrucks
+                'people': traffic_result.numberPeople
             }
         )
 
