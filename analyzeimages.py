@@ -104,7 +104,7 @@ class AnalyzeImages:
         assert isinstance(trafficResult, TrafficResult)
         self.get_database_instance().put_item(
             Item={
-                'timestamp': str(trafficResult.timestamp),
+                'timestamp': str(trafficResult.timestamp) + ":" + str(trafficResult.cameraLocationId),
                 'cameraLocationId':trafficResult.cameraLocationId,
                 'cars': trafficResult.numberCars,
                 'trucks': trafficResult.numberTrucks,
