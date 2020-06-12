@@ -62,7 +62,8 @@ class AnalyzeImages:
                                                                     use_display_name=True)
         return label_map_util.create_category_index(categories)
 
-    def load_image_into_numpy_array(self, imageconvert):
+    @staticmethod
+    def load_image_into_numpy_array(imageconvert):
         (im_width, im_height) = imageconvert.size
         try:
             return np.array(imageconvert.getdata()).reshape((im_height, im_width, 3)).astype(np.uint8)
@@ -124,7 +125,7 @@ class AnalyzeImages:
 
                         try:
                             with Image.open(path_images_dir + '/' + testpath) as image:
-                                image_np = self.load_image_into_numpy_array(image)
+                                image_np = AnalyzeImages.load_image_into_numpy_array(image)
                         except IOError:
                             print("Issue opening " + testpath)
                             os.remove(path_images_dir + '/' + testpath)
