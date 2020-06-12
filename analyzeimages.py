@@ -10,34 +10,22 @@ Example usage:
         -path_labels_map data/car_label_map.pbtxt
         -save_directory /tmp/processed
 """
-
-import sys
-
-sys.path.append('./models-master/research/')
-from object_detection.utils import label_map_util
-from object_detection.utils import visualization_utils as vis_util
-import boto3
-import argparse
-from argparse import RawTextHelpFormatter
-import time
 import random
 import numpy as np
 from saveimages import *
 import os
 import tensorflow as tf
-import csv
-from datetime import datetime
-import matplotlib.pyplot as plt
-import numpy as np
-from collections import defaultdict
-from io import StringIO
-import matplotlib.path as mpltPath
-save_to_aws = True
+import sys
+
+# TODO: Find another way to include object_detection package
+sys.path.append('./models-master/research/')
+
+from object_detection.utils import label_map_util, visualization_utils as vis_util
+
 ACCESS_KEY = ""
 SECRET_KEY = ""
 
 from PIL import Image
-import scipy.misc
 
 DETECTION_LIMIT = .4
 
