@@ -63,8 +63,8 @@ class AnalyzeImages:
                 tf.import_graph_def(od_graph_def, name='')
         return detection_graph
 
-
-    def createCategoryIndex(self,path_labels_map):
+    @staticmethod
+    def create_category_index(path_labels_map):
         num_classes = 6
         label_map = label_map_util.load_labelmap(path_labels_map)
         categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=num_classes,
@@ -109,7 +109,7 @@ class AnalyzeImages:
 
     def processimages(self,path_images_dir, path_labels_map,save_directory):
         detection_graph = self.createGraph()
-        category_index = self.createCategoryIndex(path_labels_map)
+        category_index = AnalyzeImages.create_category_index(path_labels_map)
 
         with detection_graph.as_default():
             with tf.Session(graph=detection_graph) as sess:
