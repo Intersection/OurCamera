@@ -281,7 +281,7 @@ if __name__ == '__main__':
     # log.info("cameraObjects " + str(cameraObjects))
     SaveImages().save_objects_to_file("/tmp/objects.json", cameraObjects)
     SaveImages.download_dot_files(pool, cameraObjects)
-    while (True):
+    while True:
         try:
             if SaveImages.return_true_to_download_more_images(MAX_FILES_TO_DOWNLOAD):
                 SaveImages.download_dot_files(pool, cameraObjects)
