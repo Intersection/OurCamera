@@ -214,14 +214,14 @@ class SaveImages:
         return camera_objects_without_camera_id
 
     @staticmethod
-    def fillCameraObjectsWithCameraId(cameraObjectsWithoutCameraIds):
+    def fill_camera_objects_with_camera_id(camera_objects_without_camera_ids):
         i = 0
-        total = len(cameraObjectsWithoutCameraIds)
-        for cameraObject in cameraObjectsWithoutCameraIds:
+        total = len(camera_objects_without_camera_ids)
+        for cam_obj in camera_objects_without_camera_ids:
             i += 1
-            cameraObject.cameraId = SaveImages.get_dot_camera_id_for_location_id(cameraObject.locationId)
-            log.warn("Filling " + str(i) + " of total " + str(total))
-        return cameraObjectsWithoutCameraIds  # now filled with cameraIds
+            cam_obj.cameraId = SaveImages.get_dot_camera_id_for_location_id(cam_obj.locationId)
+            log.warning("Filling " + str(i) + " of total " + str(total))
+        return camera_objects_without_camera_ids  # now filled with cameraIds
 
     @staticmethod
     def getJSONStringFromObject(cameraObjects):
@@ -277,7 +277,7 @@ if __name__ == '__main__':
 
     # TODO: Substitute multiprocessing with async / greenlets programming
     pool = Pool(processes=20)  # start 4 worker processes
-    cameraObjects = SaveImages.fillCameraObjectsWithCameraId(SaveImages.get_camera_objects_without_camera_id())
+    cameraObjects = SaveImages.fill_camera_objects_with_camera_id(SaveImages.get_camera_objects_without_camera_id())
     # log.info("cameraObjects " + str(cameraObjects))
     SaveImages().saveObjectsToFile("/tmp/objects.json", cameraObjects)
     SaveImages.download_dot_files(pool, cameraObjects)
