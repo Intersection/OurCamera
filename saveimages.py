@@ -160,14 +160,14 @@ class SaveImages:
         epoch = datetime.datetime.now().strftime("%s")
         return str(camera_object.cameraId) + "_" + str(camera_object.locationId) + "_" + str(epoch) + ".jpg"
 
-    def download_dot_files(self, pool, cameraObjects):
+    def download_dot_files(self, task_pool, camera_objects):
         log.info("download_dot_files")
         try:
-            pool.map(save_file, cameraObjects)
+            task_pool.map(save_file, camera_objects)
         except:
             log.info("failed creating map")
-            pool.join()
-            pool.close()
+            task_pool.join()
+            task_pool.close()
 
     @staticmethod
     def getDOTLocationMapAsJson():
