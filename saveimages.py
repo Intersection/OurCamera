@@ -114,9 +114,9 @@ class RenameAfterUpload(object):
 
 
 class DeleteAfterUpload(object):
-    def __init__(self, currentFilePath):
-        self._currentFilePath = currentFilePath
-        self._size = float(os.path.getsize(currentFilePath))
+    def __init__(self, current_file_path):
+        self._current_file_path = current_file_path
+        self._size = float(os.path.getsize(current_file_path))
         self._seen_so_far = 0
         self._lock = threading.Lock()
 
@@ -125,7 +125,7 @@ class DeleteAfterUpload(object):
             self._seen_so_far += bytes_amount
             percentage = (self._seen_so_far / self._size) * 100
             if percentage == 100.0:
-                os.remove(self._currentFilePath)
+                os.remove(self._current_file_path)
 
 
 class SaveImages:
