@@ -137,7 +137,7 @@ class SaveImages:
                           aws_secret_access_key=secret
                           )
 
-        s3path = s3_base_directory + "/" + SaveImages.getS3Path(file_name)
+        s3path = s3_base_directory + "/" + SaveImages.get_s3_path(file_name)
         try:
             if renamed_file_path_on_success:
                 s3.upload_file(file_path, BUCKET, s3path,
@@ -151,9 +151,9 @@ class SaveImages:
             log.info(f"Wrote {file_name} to s3://{BUCKET}/{s3path}; renamed={renamed_file_path_on_success}")
 
     @staticmethod
-    def getS3Path(fileName):
+    def get_s3_path(file_name):
         now = datetime.datetime.now()
-        return str(now.year) + "/" + str(now.month) + "/" + str(now.day) + "/" + str(now.hour) + "/" + fileName
+        return str(now.year) + "/" + str(now.month) + "/" + str(now.day) + "/" + str(now.hour) + "/" + file_name
 
     @staticmethod
     def getStringFormat(cameraObject):
