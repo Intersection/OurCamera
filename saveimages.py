@@ -171,11 +171,11 @@ class SaveImages:
             task_pool.close()
 
     @staticmethod
-    def getDOTLocationMapAsJson():
+    def get_dot_location_map_as_json():
         try:
             resp = requests.get(DOT_CAMERA_LIST_URL, verify=VERIFY_SSL_CERT)
         except:
-            log.exception(f"Coudln't make GET request to url={DOT_CAMERA_LIST_URL}")
+            log.exception(f"Coudl not make GET request to url={DOT_CAMERA_LIST_URL}")
             log.info("FAILED First version")
             raise
         else:
@@ -198,7 +198,7 @@ class SaveImages:
     def getCameraObjectsWithoutCameraId():
         cameraObjectsWithoutCameraId = []
         i = 0
-        loc_markers = SaveImages.getDOTLocationMapAsJson()["markers"]
+        loc_markers = SaveImages.get_dot_location_map_as_json()["markers"]
         log.info(f"Got {len(loc_markers)} camera locations withought ID to fill")
         for marker in loc_markers:
             i += 1
