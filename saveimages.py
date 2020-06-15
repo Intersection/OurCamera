@@ -232,7 +232,8 @@ class SaveImages:
             return True
         return False
 
-    def getTimestampAndLocationId(self, testPath):
+    @staticmethod
+    def getTimestampAndLocationId(testPath):
         try:
             splits = testPath.split("_")
             if (len(splits) > 0):
