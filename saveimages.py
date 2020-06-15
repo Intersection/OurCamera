@@ -36,14 +36,16 @@ save_to_aws = True
 ACCESS_KEY = ""
 SECRET_KEY = ""
 
+# noinspection PyArgumentList
 logging.basicConfig(
-    format='{asctime} {levelname}: {message} {pathname}:{lineno}',
     style='{',
-    level=os.getenv('LOGLEVEL', 'INFO')
+    format='{asctime} {levelname}: {message} {pathname}:{lineno}'
 )
 
 log = logging.getLogger(__name__)
-log.setLevel('DEBUG')
+
+log_level = str(os.getenv('LOG_LEVEL', 'INFO'))
+log.setLevel(log_level)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -267,7 +269,7 @@ class SaveImages:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Save images', formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(description='Save images')
     parser.add_argument('--access_key', help='aws access key')
     parser.add_argument('--secret_key', help='aws secret key')
     args = parser.parse_args()
