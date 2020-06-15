@@ -83,7 +83,7 @@ class TestSaveImages(unittest.TestCase):
 
     def test_get_array_of_camera_objects_without_camera_id(self):
         with patch.object(SaveImages, 'getDOTLocationMapAsJson', return_value=self.MockDOTLocationMapAsJson.mocks) as mock_method:
-            cameraObjects = SaveImages.getCameraObjectsWithoutCameraId()
+            cameraObjects = SaveImages.get_camera_objects_without_camera_id()
             assert isinstance(cameraObjects[0],CameraObject)
             assert cameraObjects[0].cameraId == None
             assert cameraObjects[0].longitude == "-73.93807411193848"
