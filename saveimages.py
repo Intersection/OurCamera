@@ -222,7 +222,8 @@ class SaveImages:
             log.warn("Filling " + str(i) + " of total " + str(total))
         return cameraObjectsWithoutCameraIds  # now filled with cameraIds
 
-    def getJSONStringFromObject(self, cameraObjects):
+    @staticmethod
+    def getJSONStringFromObject(cameraObjects):
         return json.dumps(cameraObjects.__dict__)
 
     def returnTrueToDownloadMoreImages(self, numberFilesDownloadPoint):

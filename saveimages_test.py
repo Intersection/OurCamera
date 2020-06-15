@@ -119,7 +119,7 @@ class TestSaveImages(unittest.TestCase):
             assert mock_remove2.call_count ==0
 
     def test_get_JSON_String_Object_from_Class(self):
-        assert self.MockCameraObjectsWithoutCameraId.mockJsonString2 == SaveImages().getJSONStringFromObject(self.MockCameraObjectsWithoutCameraId.mockObject2)
+        assert self.MockCameraObjectsWithoutCameraId.mockJsonString2 == SaveImages.getJSONStringFromObject(self.MockCameraObjectsWithoutCameraId.mockObject2)
 
     def test_return_true_when_able_to_download(self):
         with patch("os.listdir", return_value=["test1","test2"]) as mock_getsize:
