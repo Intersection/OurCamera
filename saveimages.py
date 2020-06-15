@@ -49,6 +49,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Temporary fix to alleviate SSL not updated on the server side
 VERIFY_SSL_CERT = False
+VALID_IMG_CONTENT_SIZE = 11000
 
 
 class CameraObject:
@@ -76,7 +77,6 @@ def save_file(camera_object):
     url_to_save = url + str(camera_id) + append
     log.info("trying to download" + url_to_save)
 
-    VALID_IMG_CONTENT_SIZE = 11000
     try:
         img_content = requests.get(url_to_save)
         img_content.raise_for_status()
