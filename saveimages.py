@@ -66,32 +66,32 @@ class CameraObject:
         return f"{self.name} [{self.cameraId}:{self.locationId}] (lat={self.latitude}, lon={self.longitude})"
 
 
-def saveFile(cameraObject):
-    assert isinstance(cameraObject, CameraObject)
-    cameraId = cameraObject.cameraId
+def save_file(camera_object):
+    assert isinstance(camera_object, CameraObject)
+    camera_id = camera_object.cameraId
     url = "http://207.251.86.238/cctv"
     append = ".jpg?math=0.011125243364920934"
-    fileName = SaveImages.getStringFormat(cameraObject)
-    filePath = saveDirectory + fileName
-    urlToSave = url + str(cameraId) + append
-    log.info("trying to download" + urlToSave)
+    file_name = SaveImages.getStringFormat(camera_object)
+    file_path = saveDirectory + file_name
+    url_to_save = url + str(camera_id) + append
+    log.info("trying to download" + url_to_save)
 
     VALID_IMG_CONTENT_SIZE = 11000
     try:
-        img_content = requests.get(urlToSave)
+        img_content = requests.get(url_to_save)
     except:
-        log.exception(f"Couldn't GET image with  url={urlToSave}")
+        log.exception(f"Could not make GET request to image with url={url_to_save}")
     else:
         if len(img_content.content) > VALID_IMG_CONTENT_SIZE:
             try:
-                with open(filePath, 'wb') as f:
+                with open(file_path, 'wb') as f:
                     f.write(img_content.content)
-                    log.info(f'Wrote {len(img_content.content)} bytes to {filePath}')
+                    log.info(f'Wrote {len(img_content.content)} bytes to {file_path}')
             except:
-                logging.exception(f"Couldn't write image content to file={filePath}")
+                logging.exception(f"Could not write image content to file={file_path}")
                 raise
             else:
-                SaveImages().saveFileToS3(filePath, fileName, "raw", outDirectory + "/" + fileName, ACCESS_KEY,
+                SaveImages().saveFileToS3(file_path, file_name, "raw", outDirectory + "/" + file_name, ACCESS_KEY,
                                           SECRET_KEY)
 
 
@@ -161,7 +161,7 @@ class SaveImages:
     def download_dot_files(self, pool, cameraObjects):
         log.info("download_dot_files")
         try:
-            pool.map(saveFile, cameraObjects)
+            pool.map(save_file, cameraObjects)
         except:
             log.info("failed creating map")
             pool.join()

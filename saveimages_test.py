@@ -105,7 +105,7 @@ class TestSaveImages(unittest.TestCase):
     def test_save_images(self,boto3):
         with patch("urllib.urlretrieve") as mock_urlretrieve, \
                 patch("os.path.getsize",return_value=5) as mock_getsize, patch("os.remove") as mock_remove:
-            saveFile(self.MockCameraObjectsWithoutCameraId.mockObject2)
+            save_file(self.MockCameraObjectsWithoutCameraId.mockObject2)
             assert mock_urlretrieve.call_count ==1
             assert mock_getsize.call_count ==1
             assert mock_remove.call_count ==1
@@ -113,7 +113,7 @@ class TestSaveImages(unittest.TestCase):
         with patch("urllib.urlretrieve") as mock_urlretrieve2, \
                 patch("os.path.getsize",return_value=50000) as mock_getsize2, patch("os.remove") as mock_remove2,\
                 patch("os.rename") as mock_rename2:
-            saveFile(self.MockCameraObjectsWithoutCameraId.mockObject2)
+            save_file(self.MockCameraObjectsWithoutCameraId.mockObject2)
             assert mock_urlretrieve2.call_count ==1
             assert mock_getsize2.call_count ==1
             assert mock_remove2.call_count ==0
