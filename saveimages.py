@@ -234,15 +234,15 @@ class SaveImages:
         return False
 
     @staticmethod
-    def getTimestampAndLocationId(testPath):
+    def get_timestamp_and_location_id(test_path):
         try:
-            splits = testPath.split("_")
-            if (len(splits) > 0):
-                locationId = splits[1]
+            splits = test_path.split("_")
+            if len(splits) > 0:
+                location_id = splits[1]
                 timestamp = splits[2][:-4]
-                return int(timestamp), int(locationId)
+                return int(timestamp), int(location_id)
         except:
-            return 0, 0
+            pass
         return 0, 0
 
     def saveObjectsToFile(self, filePath, objectsToSave):

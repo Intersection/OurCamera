@@ -127,11 +127,11 @@ class TestSaveImages(unittest.TestCase):
             assert SaveImages.return_true_to_download_more_images(1) == False
 
     def test_get_timestamp_and_location_id(self):
-        timestamp,locationId = SaveImages.getTimestampAndLocationId("ignore_1_1539560991.jpg")
+        timestamp,locationId = SaveImages.get_timestamp_and_location_id("ignore_1_1539560991.jpg")
         assert timestamp == 1539560991
         assert locationId == 1
 
-        timestamp,locationId = SaveImages.getTimestampAndLocationId(".DS_Store")
+        timestamp,locationId = SaveImages.get_timestamp_and_location_id(".DS_Store")
         assert timestamp == 0
         assert locationId == 0
 
