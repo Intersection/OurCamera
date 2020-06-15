@@ -9,20 +9,19 @@ then downloads images.
 Example usage:
     python saveimages.py
 """
-import json
-import requests
-import threading
-import logging
-import argparse
-from argparse import RawTextHelpFormatter
-import os
-from multiprocessing import Pool
-import boto3
 import datetime
-import time
 import errno
-import urllib3
+import json
+import logging
+import os
+import threading
+import time
+import argparse
+from multiprocessing import Pool
 
+import boto3
+import requests
+import urllib3
 
 DOT_CAMERA_LIST_URL = "https://webcams.nyctmc.org/new-data.php?query="
 # DOT_CAMERA_LIST_URL = "https://dotsignals.org/new-data.php?query="
@@ -45,7 +44,6 @@ logging.basicConfig(
 
 log = logging.getLogger(__name__)
 log.setLevel('DEBUG')
-
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -266,8 +264,7 @@ class SaveImages:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Save images', formatter_class=RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(description='Save images', formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('--access_key', help='aws access key')
     parser.add_argument('--secret_key', help='aws secret key')
     args = parser.parse_args()
