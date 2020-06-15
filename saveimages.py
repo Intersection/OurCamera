@@ -127,9 +127,6 @@ class SaveImages:
                 if percentage == 100.0:
                     os.remove(self._currentFilePath)
 
-    def renameFunction(self, filePath, nextFilePath):
-        os.rename(filePath, nextFilePath)
-
     def saveFileToS3(self, filePath, fileName, s3BaseDirectory, renamedFilePathOnSuccess, key, secret):
         if not save_to_aws:
             return
