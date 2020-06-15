@@ -98,7 +98,7 @@ class TestSaveImages(unittest.TestCase):
             mockObjects = self.MockCameraObjectsWithoutCameraId.mockObjects
             assert isinstance(mockObjects[0], CameraObject)
             assert mockObjects[0].cameraId == None
-            SaveImages.fillCameraObjectsWithCameraId(mockObjects)
+            SaveImages.fill_camera_objects_with_camera_id(mockObjects)
             assert mockObjects[0].cameraId == 261
 
     @patch('saveimages.boto3')
