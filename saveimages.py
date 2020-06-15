@@ -79,15 +79,17 @@ def save_file(camera_object):
     VALID_IMG_CONTENT_SIZE = 11000
     try:
         img_content = requests.get(url_to_save)
-    except:
+        img_content.raise_for_status()
+    except requests.exceptions.HTTPError:
         log.exception(f"Could not make GET request to image with url={url_to_save}")
+        raise
     else:
         if len(img_content.content) > VALID_IMG_CONTENT_SIZE:
             try:
                 with open(file_path, 'wb') as f:
                     f.write(img_content.content)
                     log.info(f'Wrote {len(img_content.content)} bytes to {file_path}')
-            except:
+            except IOError:
                 logging.exception(f"Could not write image content to file={file_path}")
                 raise
             else:
