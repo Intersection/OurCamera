@@ -98,10 +98,10 @@ def save_file(camera_object):
 
 
 class RenameAfterUpload(object):
-    def __init__(self, currentFilePath, nextFilePath):
-        self._currentFilePath = currentFilePath
-        self._nextFilePath = nextFilePath
-        self._size = float(os.path.getsize(currentFilePath))
+    def __init__(self, current_file_path, next_file_path):
+        self._current_file_path = current_file_path
+        self._next_file_path = next_file_path
+        self._size = float(os.path.getsize(current_file_path))
         self._seen_so_far = 0
         self._lock = threading.Lock()
 
@@ -110,7 +110,7 @@ class RenameAfterUpload(object):
             self._seen_so_far += bytes_amount
             percentage = (self._seen_so_far / self._size) * 100
             if percentage == 100.0:
-                os.rename(self._currentFilePath, self._nextFilePath)
+                os.rename(self._current_file_path, self._next_file_path)
 
 
 class DeleteAfterUpload(object):
