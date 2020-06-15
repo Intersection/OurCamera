@@ -97,36 +97,38 @@ def saveFile(cameraObject):
                                           SECRET_KEY)
 
 
+class RenameAfterUpload(object):
+    def __init__(self, currentFilePath, nextFilePath):
+        self._currentFilePath = currentFilePath
+        self._nextFilePath = nextFilePath
+        self._size = float(os.path.getsize(currentFilePath))
+        self._seen_so_far = 0
+        self._lock = threading.Lock()
+
+    def __call__(self, bytes_amount):
+        with self._lock:
+            self._seen_so_far += bytes_amount
+            percentage = (self._seen_so_far / self._size) * 100
+            if percentage == 100.0:
+                os.rename(self._currentFilePath, self._nextFilePath)
+
+
+class DeleteAfterUpload(object):
+    def __init__(self, currentFilePath):
+        self._currentFilePath = currentFilePath
+        self._size = float(os.path.getsize(currentFilePath))
+        self._seen_so_far = 0
+        self._lock = threading.Lock()
+
+    def __call__(self, bytes_amount):
+        with self._lock:
+            self._seen_so_far += bytes_amount
+            percentage = (self._seen_so_far / self._size) * 100
+            if percentage == 100.0:
+                os.remove(self._currentFilePath)
+
+
 class SaveImages:
-    class RenameAfterUpload(object):
-        def __init__(self, currentFilePath, nextFilePath):
-            self._currentFilePath = currentFilePath
-            self._nextFilePath = nextFilePath
-            self._size = float(os.path.getsize(currentFilePath))
-            self._seen_so_far = 0
-            self._lock = threading.Lock()
-
-        def __call__(self, bytes_amount):
-            with self._lock:
-                self._seen_so_far += bytes_amount
-                percentage = (self._seen_so_far / self._size) * 100
-                if percentage == 100.0:
-                    os.rename(self._currentFilePath, self._nextFilePath)
-
-    class DeleteAfterUpload(object):
-        def __init__(self, currentFilePath):
-            self._currentFilePath = currentFilePath
-            self._size = float(os.path.getsize(currentFilePath))
-            self._seen_so_far = 0
-            self._lock = threading.Lock()
-
-        def __call__(self, bytes_amount):
-            with self._lock:
-                self._seen_so_far += bytes_amount
-                percentage = (self._seen_so_far / self._size) * 100
-                if percentage == 100.0:
-                    os.remove(self._currentFilePath)
-
     def saveFileToS3(self, filePath, fileName, s3BaseDirectory, renamedFilePathOnSuccess, key, secret):
         if not save_to_aws:
             return
@@ -139,10 +141,10 @@ class SaveImages:
         try:
             if renamedFilePathOnSuccess:
                 s3.upload_file(filePath, BUCKET, s3path,
-                               Callback=self.RenameAfterUpload(filePath, renamedFilePathOnSuccess))
+                               Callback=RenameAfterUpload(filePath, renamedFilePathOnSuccess))
             else:
                 s3.upload_file(filePath, BUCKET, s3path,
-                               Callback=self.DeleteAfterUpload(filePath))
+                               Callback=DeleteAfterUpload(filePath))
         except Exception as e:
             log.exception(f"Couldn't upload {filePath} to s3://{BUCKET}/{s3path}")
         else:
