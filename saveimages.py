@@ -93,8 +93,8 @@ def save_file(camera_object):
                 logging.exception(f"Could not write image content to file={file_path}")
                 raise
             else:
-                SaveImages().saveFileToS3(file_path, file_name, "raw", outDirectory + "/" + file_name, ACCESS_KEY,
-                                          SECRET_KEY)
+                SaveImages().save_file_to_s3(file_path, file_name, "raw", outDirectory + "/" + file_name, ACCESS_KEY,
+                                             SECRET_KEY)
 
 
 class RenameAfterUpload(object):
@@ -129,7 +129,7 @@ class DeleteAfterUpload(object):
 
 
 class SaveImages:
-    def saveFileToS3(self, filePath, fileName, s3BaseDirectory, renamedFilePathOnSuccess, key, secret):
+    def save_file_to_s3(self, file_path, file_name, s3_base_directory, renamed_file_path_on_success, key, secret):
         if not save_to_aws:
             return
         s3 = boto3.client('s3',
@@ -137,18 +137,18 @@ class SaveImages:
                           aws_secret_access_key=secret
                           )
 
-        s3path = s3BaseDirectory + "/" + SaveImages.getS3Path(fileName)
+        s3path = s3_base_directory + "/" + SaveImages.getS3Path(file_name)
         try:
-            if renamedFilePathOnSuccess:
-                s3.upload_file(filePath, BUCKET, s3path,
-                               Callback=RenameAfterUpload(filePath, renamedFilePathOnSuccess))
+            if renamed_file_path_on_success:
+                s3.upload_file(file_path, BUCKET, s3path,
+                               Callback=RenameAfterUpload(file_path, renamed_file_path_on_success))
             else:
-                s3.upload_file(filePath, BUCKET, s3path,
-                               Callback=DeleteAfterUpload(filePath))
+                s3.upload_file(file_path, BUCKET, s3path,
+                               Callback=DeleteAfterUpload(file_path))
         except Exception as e:
-            log.exception(f"Couldn't upload {filePath} to s3://{BUCKET}/{s3path}")
+            log.exception(f"Could not upload {file_path} to s3://{BUCKET}/{s3path}")
         else:
-            log.info(f"Wrote {fileName} to s3://{BUCKET}/{s3path}; renamed={renamedFilePathOnSuccess}")
+            log.info(f"Wrote {file_name} to s3://{BUCKET}/{s3path}; renamed={renamed_file_path_on_success}")
 
     @staticmethod
     def getS3Path(fileName):
@@ -247,7 +247,7 @@ class SaveImages:
     def saveObjectsToFile(self, filePath, objectsToSave):
         with open(filePath, 'w') as outfile:
             json.dump([ob.__dict__ for ob in objectsToSave], outfile)
-        self.saveFileToS3(filePath, "cameraobjects", "map", "", ACCESS_KEY, SECRET_KEY)
+        self.save_file_to_s3(filePath, "cameraobjects", "map", "", ACCESS_KEY, SECRET_KEY)
 
     @staticmethod
     def makeSureDirectoriesExist():
