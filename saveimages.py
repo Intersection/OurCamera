@@ -246,10 +246,11 @@ class SaveImages:
         self.saveFileToS3(filePath, "cameraobjects", "map", "", ACCESS_KEY, SECRET_KEY)
 
     def makeSureDirectoriesExist(self):
-        self.mkdir_p(saveDirectory)
-        self.mkdir_p(outDirectory)
+        SaveImages.mkdir_p(saveDirectory)
+        SaveImages.mkdir_p(outDirectory)
 
-    def mkdir_p(self, path):
+    @staticmethod
+    def mkdir_p(path):
         try:
             os.makedirs(path)
         except OSError as exc:  # Python >2.5
