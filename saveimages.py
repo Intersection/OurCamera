@@ -224,8 +224,8 @@ class SaveImages:
         return camera_objects_without_camera_ids  # now filled with cameraIds
 
     @staticmethod
-    def getJSONStringFromObject(cameraObjects):
-        return json.dumps(cameraObjects.__dict__)
+    def get_json_string_from_object(camera_objects):
+        return json.dumps(camera_objects.__dict__)
 
     @staticmethod
     def returnTrueToDownloadMoreImages(numberFilesDownloadPoint):
