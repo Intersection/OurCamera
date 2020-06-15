@@ -193,7 +193,8 @@ class SaveImages:
             if page[cameraId - i] == "v":
                 return int(page[cameraId - i + 1:cameraId])
 
-    def getCameraObjectsWithoutCameraId(self):
+    @staticmethod
+    def getCameraObjectsWithoutCameraId():
         cameraObjectsWithoutCameraId = []
         i = 0
         loc_markers = SaveImages.getDOTLocationMapAsJson()["markers"]
@@ -270,7 +271,7 @@ if __name__ == '__main__':
 
     # TODO: Substitute multiprocessing with async / greenlets programming
     pool = Pool(processes=20)  # start 4 worker processes
-    cameraObjects = SaveImages().fillCameraObjectsWithCameraId(SaveImages().getCameraObjectsWithoutCameraId())
+    cameraObjects = SaveImages().fillCameraObjectsWithCameraId(SaveImages.getCameraObjectsWithoutCameraId())
     # log.info("cameraObjects " + str(cameraObjects))
     SaveImages().saveObjectsToFile("/tmp/objects.json", cameraObjects)
     SaveImages().download_dot_files(pool, cameraObjects)
