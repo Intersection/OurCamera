@@ -169,7 +169,8 @@ class SaveImages:
             pool.join()
             pool.close()
 
-    def getDOTLocationMapAsJson(self):
+    @staticmethod
+    def getDOTLocationMapAsJson():
         try:
             resp = requests.get(DOT_CAMERA_LIST_URL, verify=VERIFY_SSL_CERT)
         except:
@@ -194,7 +195,7 @@ class SaveImages:
     def getCameraObjectsWithoutCameraId(self):
         cameraObjectsWithoutCameraId = []
         i = 0
-        loc_markers = self.getDOTLocationMapAsJson()["markers"]
+        loc_markers = SaveImages.getDOTLocationMapAsJson()["markers"]
         log.info(f"Got {len(loc_markers)} camera locations withought ID to fill")
         for marker in loc_markers:
             i += 1
