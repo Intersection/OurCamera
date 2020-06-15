@@ -160,7 +160,8 @@ class SaveImages:
         epoch = datetime.datetime.now().strftime("%s")
         return str(camera_object.cameraId) + "_" + str(camera_object.locationId) + "_" + str(epoch) + ".jpg"
 
-    def download_dot_files(self, task_pool, camera_objects):
+    @staticmethod
+    def download_dot_files(task_pool, camera_objects):
         log.info("download_dot_files")
         try:
             task_pool.map(save_file, camera_objects)
@@ -279,11 +280,11 @@ if __name__ == '__main__':
     cameraObjects = SaveImages.fillCameraObjectsWithCameraId(SaveImages.getCameraObjectsWithoutCameraId())
     # log.info("cameraObjects " + str(cameraObjects))
     SaveImages().saveObjectsToFile("/tmp/objects.json", cameraObjects)
-    SaveImages().download_dot_files(pool, cameraObjects)
+    SaveImages.download_dot_files(pool, cameraObjects)
     while (True):
         try:
             if SaveImages.returnTrueToDownloadMoreImages(MAX_FILES_TO_DOWNLOAD):
-                SaveImages().download_dot_files(pool, cameraObjects)
+                SaveImages.download_dot_files(pool, cameraObjects)
             else:
                 log.info("sleeping")
                 time.sleep(10.0)
