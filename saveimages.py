@@ -195,23 +195,23 @@ class SaveImages:
                 return int(page[camera_id - i + 1:camera_id])
 
     @staticmethod
-    def getCameraObjectsWithoutCameraId():
-        cameraObjectsWithoutCameraId = []
+    def get_camera_objects_without_camera_id():
+        camera_objects_without_camera_id = []
         i = 0
         loc_markers = SaveImages.get_dot_location_map_as_json()["markers"]
-        log.info(f"Got {len(loc_markers)} camera locations withought ID to fill")
+        log.info(f"Got {len(loc_markers)} camera locations without ID to fill")
         for marker in loc_markers:
             i += 1
             if i > NUMBER_FILES_DOWNLOAD_LIMIT:
                 log.info(f"Got more than {NUMBER_FILES_DOWNLOAD_LIMIT} cameras to work with. Exiting.")
-                return cameraObjectsWithoutCameraId
-            cameraObject = CameraObject()
-            cameraObject.locationId = marker["id"]
-            cameraObject.latitude = marker["latitude"]
-            cameraObject.longitude = marker["longitude"]
-            cameraObject.name = marker["content"]
-            cameraObjectsWithoutCameraId.append(cameraObject)
-        return cameraObjectsWithoutCameraId
+                return camera_objects_without_camera_id
+            camera_object = CameraObject()
+            camera_object.locationId = marker["id"]
+            camera_object.latitude = marker["latitude"]
+            camera_object.longitude = marker["longitude"]
+            camera_object.name = marker["content"]
+            camera_objects_without_camera_id.append(camera_object)
+        return camera_objects_without_camera_id
 
     @staticmethod
     def fillCameraObjectsWithCameraId(cameraObjectsWithoutCameraIds):
@@ -277,7 +277,7 @@ if __name__ == '__main__':
 
     # TODO: Substitute multiprocessing with async / greenlets programming
     pool = Pool(processes=20)  # start 4 worker processes
-    cameraObjects = SaveImages.fillCameraObjectsWithCameraId(SaveImages.getCameraObjectsWithoutCameraId())
+    cameraObjects = SaveImages.fillCameraObjectsWithCameraId(SaveImages.get_camera_objects_without_camera_id())
     # log.info("cameraObjects " + str(cameraObjects))
     SaveImages().saveObjectsToFile("/tmp/objects.json", cameraObjects)
     SaveImages.download_dot_files(pool, cameraObjects)
