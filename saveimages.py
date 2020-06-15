@@ -226,7 +226,8 @@ class SaveImages:
     def getJSONStringFromObject(cameraObjects):
         return json.dumps(cameraObjects.__dict__)
 
-    def returnTrueToDownloadMoreImages(self, numberFilesDownloadPoint):
+    @staticmethod
+    def returnTrueToDownloadMoreImages(numberFilesDownloadPoint):
         if len([name for name in os.listdir(outDirectory)]) < numberFilesDownloadPoint:
             return True
         return False
@@ -280,7 +281,7 @@ if __name__ == '__main__':
     SaveImages().download_dot_files(pool, cameraObjects)
     while (True):
         try:
-            if SaveImages().returnTrueToDownloadMoreImages(MAX_FILES_TO_DOWNLOAD):
+            if SaveImages.returnTrueToDownloadMoreImages(MAX_FILES_TO_DOWNLOAD):
                 SaveImages().download_dot_files(pool, cameraObjects)
             else:
                 log.info("sleeping")

@@ -123,8 +123,8 @@ class TestSaveImages(unittest.TestCase):
 
     def test_return_true_when_able_to_download(self):
         with patch("os.listdir", return_value=["test1","test2"]) as mock_getsize:
-            assert SaveImages().returnTrueToDownloadMoreImages(4)
-            assert SaveImages().returnTrueToDownloadMoreImages(1) == False
+            assert SaveImages.returnTrueToDownloadMoreImages(4)
+            assert SaveImages.returnTrueToDownloadMoreImages(1) == False
 
     def test_get_timestamp_and_location_id(self):
         timestamp,locationId = SaveImages().getTimestampAndLocationId("ignore_1_1539560991.jpg")
