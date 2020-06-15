@@ -251,7 +251,7 @@ class SaveImages:
         self.save_file_to_s3(file_path, "cameraobjects", "map", "", ACCESS_KEY, SECRET_KEY)
 
     @staticmethod
-    def makeSureDirectoriesExist():
+    def make_sure_directories_exist():
         SaveImages.mkdir_p(saveDirectory)
         SaveImages.mkdir_p(outDirectory)
 
@@ -273,7 +273,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     ACCESS_KEY = args.access_key
     SECRET_KEY = args.secret_key
-    SaveImages.makeSureDirectoriesExist()
+    SaveImages.make_sure_directories_exist()
 
     # TODO: Substitute multiprocessing with async / greenlets programming
     pool = Pool(processes=20)  # start 4 worker processes
