@@ -70,7 +70,7 @@ class TestSaveImages(unittest.TestCase):
 
     def test_get_dot_location_map_as_json(self):
         with patch("urllib.urlretrieve", return_value=self.MockDOTResponseJson()) as mock_urlopen:
-            result = SaveImages.getDOTLocationMapAsJson()
+            result = SaveImages.get_dot_location_map_as_json()
             assert 'markers' in result
             assert isinstance(result["markers"], list)
             assert result["markers"][0]["id"] == "368"
