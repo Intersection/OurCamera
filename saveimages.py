@@ -186,13 +186,13 @@ class SaveImages:
             return resp.json()
 
     @staticmethod
-    def getDOTCameraIdForLocationId(locationId):
-        page = requests.get(DOT_CAMERA_ID_URL + str(locationId), verify=VERIFY_SSL_CERT).text
-        cameraId = page.find(".jpg")
-        log.info(f'CameraId={cameraId}')
+    def get_dot_camera_id_for_location_id(location_id):
+        page = requests.get(DOT_CAMERA_ID_URL + str(location_id), verify=VERIFY_SSL_CERT).text
+        camera_id = page.find(".jpg")
+        log.info(f'CameraId={camera_id}')
         for i in range(0, 5):
-            if page[cameraId - i] == "v":
-                return int(page[cameraId - i + 1:cameraId])
+            if page[camera_id - i] == "v":
+                return int(page[camera_id - i + 1:camera_id])
 
     @staticmethod
     def getCameraObjectsWithoutCameraId():
@@ -219,7 +219,7 @@ class SaveImages:
         total = len(cameraObjectsWithoutCameraIds)
         for cameraObject in cameraObjectsWithoutCameraIds:
             i += 1
-            cameraObject.cameraId = SaveImages.getDOTCameraIdForLocationId(cameraObject.locationId)
+            cameraObject.cameraId = SaveImages.get_dot_camera_id_for_location_id(cameraObject.locationId)
             log.warn("Filling " + str(i) + " of total " + str(total))
         return cameraObjectsWithoutCameraIds  # now filled with cameraIds
 

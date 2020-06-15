@@ -77,7 +77,7 @@ class TestSaveImages(unittest.TestCase):
 
     def test_get_dot_camera_id_for_location_id(self):
         with patch("urllib.urlopen", return_value=self.MockDOTResponseString()) as mock_urlopen:
-            result = SaveImages.getDOTCameraIdForLocationId(368)
+            result = SaveImages.get_dot_camera_id_for_location_id(368)
             print("Result is " + str(result))
             assert result == 261
 
