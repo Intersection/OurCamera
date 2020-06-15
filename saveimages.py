@@ -72,7 +72,7 @@ def save_file(camera_object):
     camera_id = camera_object.cameraId
     url = "http://207.251.86.238/cctv"
     append = ".jpg?math=0.011125243364920934"
-    file_name = SaveImages.getStringFormat(camera_object)
+    file_name = SaveImages.get_string_format(camera_object)
     file_path = saveDirectory + file_name
     url_to_save = url + str(camera_id) + append
     log.info("trying to download" + url_to_save)
@@ -156,9 +156,9 @@ class SaveImages:
         return str(now.year) + "/" + str(now.month) + "/" + str(now.day) + "/" + str(now.hour) + "/" + file_name
 
     @staticmethod
-    def getStringFormat(cameraObject):
+    def get_string_format(camera_object):
         epoch = datetime.datetime.now().strftime("%s")
-        return str(cameraObject.cameraId) + "_" + str(cameraObject.locationId) + "_" + str(epoch) + ".jpg"
+        return str(camera_object.cameraId) + "_" + str(camera_object.locationId) + "_" + str(epoch) + ".jpg"
 
     def download_dot_files(self, pool, cameraObjects):
         log.info("download_dot_files")
