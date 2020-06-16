@@ -2,5 +2,5 @@ pytest
 pytest-cov
 mock
 boto3
-tensorflow
+tensorflow-gpu==1.13.1
 matplotlib
