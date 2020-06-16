@@ -274,17 +274,15 @@ if __name__ == '__main__':
     # log.info("cameraObjects " + str(cameraObjects))
     SaveImages.save_objects_to_file("/tmp/objects.json", cameraObjects)
     SaveImages.download_dot_files(pool, cameraObjects)
-
-    while True:
-        try:
+    try:
+        while True:
             if SaveImages.return_true_to_download_more_images(MAX_FILES_TO_DOWNLOAD):
                 SaveImages.download_dot_files(pool, cameraObjects)
             else:
                 log.info("sleeping")
                 time.sleep(10.0)
-        except:
-            log.exception("Unknown error while downloading files. Exiting.")
-            break
-        finally:
-            pool.close()
-            pool.join()
+    except:
+        log.exception("An error occurred while downloading files. Exiting.")
+    finally:
+        pool.close()
+        pool.join()
