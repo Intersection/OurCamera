@@ -95,7 +95,7 @@ def save_file(camera_object):
                 logging.exception(f"Could not write image content to file={file_path}")
                 raise
             else:
-                SaveImages().save_file_to_s3(file_path, file_name, "raw", outDirectory + "/" + file_name, ACCESS_KEY,
+                SaveImages.save_file_to_s3(file_path, file_name, "raw", outDirectory + "/" + file_name, ACCESS_KEY,
                                              SECRET_KEY)
 
 
@@ -131,7 +131,8 @@ class DeleteAfterUpload(object):
 
 
 class SaveImages:
-    def save_file_to_s3(self, file_path, file_name, s3_base_directory, renamed_file_path_on_success, key, secret):
+    @staticmethod
+    def save_file_to_s3(file_path, file_name, s3_base_directory, renamed_file_path_on_success, key, secret):
         if not save_to_aws:
             return
         s3 = boto3.client('s3',
@@ -249,7 +250,7 @@ class SaveImages:
     def save_objects_to_file(self, file_path, objects_to_save):
         with open(file_path, 'w') as outfile:
             json.dump([ob.__dict__ for ob in objects_to_save], outfile)
-        self.save_file_to_s3(file_path, "cameraobjects", "map", "", ACCESS_KEY, SECRET_KEY)
+        SaveImages.save_file_to_s3(file_path, "cameraobjects", "map", "", ACCESS_KEY, SECRET_KEY)
 
     @staticmethod
     def make_sure_directories_exist():

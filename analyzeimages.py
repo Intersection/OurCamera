@@ -81,7 +81,7 @@ class AnalyzeImages:
 
     @staticmethod
     def save_annotated_image(file_name, file_path, s3directory):
-        return SaveImages().save_file_to_s3(file_path, file_name, s3directory, False, ACCESS_KEY, SECRET_KEY)
+        return SaveImages.save_file_to_s3(file_path, file_name, s3directory, False, ACCESS_KEY, SECRET_KEY)
 
     def get_database_instance(self):
         if self._table is not None:
