@@ -27,6 +27,7 @@ SECRET_KEY = ""
 
 DETECTION_LIMIT = .4
 
+# noinspection PyArgumentList
 logging.basicConfig(
     format='{asctime} {levelname}: {message} {pathname}:{lineno}',
     style='{',
