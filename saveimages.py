@@ -247,7 +247,8 @@ class SaveImages:
             pass
         return 0, 0
 
-    def save_objects_to_file(self, file_path, objects_to_save):
+    @staticmethod
+    def save_objects_to_file(file_path, objects_to_save):
         with open(file_path, 'w') as outfile:
             json.dump([ob.__dict__ for ob in objects_to_save], outfile)
         SaveImages.save_file_to_s3(file_path, "cameraobjects", "map", "", ACCESS_KEY, SECRET_KEY)
@@ -281,7 +282,7 @@ if __name__ == '__main__':
     pool = Pool(processes=20)  # start 4 worker processes
     cameraObjects = SaveImages.fill_camera_objects_with_camera_id(SaveImages.get_camera_objects_without_camera_id())
     # log.info("cameraObjects " + str(cameraObjects))
-    SaveImages().save_objects_to_file("/tmp/objects.json", cameraObjects)
+    SaveImages.save_objects_to_file("/tmp/objects.json", cameraObjects)
     SaveImages.download_dot_files(pool, cameraObjects)
 
     while True:
