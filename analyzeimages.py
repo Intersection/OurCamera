@@ -199,9 +199,11 @@ class AnalyzeImages:
 
 
 if __name__ == '__main__':
+    import argparse
+
     parser = argparse.ArgumentParser(
         description='Analyze traffic images to determine rate of blocking bike and bus lanes',
-        formatter_class=RawTextHelpFormatter
+        formatter_class=argparse.RawTextHelpFormatter
     )
 
     parser.add_argument('-path_images', help='the folder with all the downloaded images in it')
