@@ -95,8 +95,8 @@ def save_file(camera_object):
                 logging.exception(f"Could not write image content to file={file_path}")
                 raise
             else:
-                SaveImages.save_file_to_s3(file_path, file_name, "raw", outDirectory + "/" + file_name, ACCESS_KEY,
-                                             SECRET_KEY)
+                rename_on_success = outDirectory + "/" + file_name
+                SaveImages.save_file_to_s3(file_path, file_name, "raw", rename_on_success, ACCESS_KEY, SECRET_KEY)
 
 
 class RenameAfterUpload(object):
@@ -132,26 +132,16 @@ class DeleteAfterUpload(object):
 
 class SaveImages:
     @staticmethod
-    def save_file_to_s3(file_path, file_name, s3_base_directory, renamed_file_path_on_success, key, secret):
+    def save_file_to_s3(fpath, file_name, s3_base_directory, rename_on_success, key, secret):
         if not save_to_aws:
             return
-        s3 = boto3.client('s3',
-                          aws_access_key_id=key,
-                          aws_secret_access_key=secret
-                          )
 
+        s3 = boto3.client('s3', aws_access_key_id=key, aws_secret_access_key=secret)
         s3path = s3_base_directory + "/" + SaveImages.get_s3_path(file_name)
-        try:
-            if renamed_file_path_on_success:
-                s3.upload_file(file_path, BUCKET, s3path,
-                               Callback=RenameAfterUpload(file_path, renamed_file_path_on_success))
-            else:
-                s3.upload_file(file_path, BUCKET, s3path,
-                               Callback=DeleteAfterUpload(file_path))
-        except Exception as e:
-            log.exception(f"Could not upload {file_path} to s3://{BUCKET}/{s3path}")
-        else:
-            log.info(f"Wrote {file_name} to s3://{BUCKET}/{s3path}; renamed={renamed_file_path_on_success}")
+
+        callback = RenameAfterUpload(fpath, rename_on_success) if rename_on_success else DeleteAfterUpload(fpath)
+        s3.upload_file(fpath, BUCKET, s3path, Callback=callback)
+        log.info(f"Wrote {file_name} to s3://{BUCKET}/{s3path}; renamed={rename_on_success}")
 
     @staticmethod
     def get_s3_path(file_name):
