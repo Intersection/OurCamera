@@ -34,7 +34,7 @@ logging.basicConfig(
 )
 
 log = logging.getLogger(__name__)
-log.setLevel('DEBUG')
+log.setLevel(os.getenv('LOG_LEVEL', 'INFO'))
 
 
 class TrafficResult:
