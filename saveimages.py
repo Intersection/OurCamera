@@ -206,14 +206,14 @@ class SaveImages:
         return camera_objects_without_camera_id
 
     @staticmethod
-    def fill_camera_objects_with_camera_id(camera_objects_without_camera_ids):
+    def fill_camera_objects_with_camera_id(camera_objects):
         i = 0
-        total = len(camera_objects_without_camera_ids)
-        for cam_obj in camera_objects_without_camera_ids:
+        total = len(camera_objects)
+        for cam_obj in camera_objects:
             i += 1
             cam_obj.cameraId = SaveImages.get_dot_camera_id_for_location_id(cam_obj.locationId)
             log.warning("Filling " + str(i) + " of total " + str(total))
-        return camera_objects_without_camera_ids  # now filled with cameraIds
+        return camera_objects  # now filled with cameraIds
 
     @staticmethod
     def get_json_string_from_object(camera_objects):
