@@ -127,7 +127,7 @@ class AnalyzeImages:
                 while True:
                     for testpath in os.listdir(path_images_dir):
                         start_time = time.time()
-                        timestamp, location_id = SaveImages().get_timestamp_and_location_id(testpath)
+                        timestamp, location_id = SaveImages.get_timestamp_and_location_id(testpath)
                         if timestamp == 0:
                             os.remove(path_images_dir + "/" + testpath)
                             continue
