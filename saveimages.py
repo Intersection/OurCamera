@@ -168,9 +168,8 @@ class SaveImages:
         try:
             task_pool.map(save_file, camera_objects)
         except:
-            log.info("failed creating map")
-            task_pool.join()
-            task_pool.close()
+            log.exception("Failed running save_file() worker processes")
+            raise
 
     @staticmethod
     def get_dot_location_map_as_json():
@@ -283,6 +282,7 @@ if __name__ == '__main__':
     # log.info("cameraObjects " + str(cameraObjects))
     SaveImages().save_objects_to_file("/tmp/objects.json", cameraObjects)
     SaveImages.download_dot_files(pool, cameraObjects)
+
     while True:
         try:
             if SaveImages.return_true_to_download_more_images(MAX_FILES_TO_DOWNLOAD):
@@ -291,6 +291,8 @@ if __name__ == '__main__':
                 log.info("sleeping")
                 time.sleep(10.0)
         except:
+            log.exception("Unknown error while downloading files. Exiting.")
+            break
+        finally:
             pool.close()
             pool.join()
-            break
