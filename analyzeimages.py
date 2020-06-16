@@ -195,7 +195,7 @@ class AnalyzeImages:
                             log.info(f"testpath={testpath}")
                             Image.fromarray(image_np).save(save_directory + "/" + testpath)
                             AnalyzeImages.save_annotated_image(testpath, save_directory + "/" + testpath, "annotated")
-                            os.remove(dir_testpath)
+                        os.remove(dir_testpath)
 
 
 if __name__ == '__main__':
