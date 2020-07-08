@@ -139,7 +139,7 @@ class SaveImages:
         s3 = boto3.client('s3', aws_access_key_id=key, aws_secret_access_key=secret)
         s3path = s3_base_directory + "/" + SaveImages.get_s3_path(file_name)
 
-        callback = RenameAfterUpload(fpath, rename_on_success) if rename_on_success else DeleteAfterUpload(fpath)
+        callback = RenameAfterUpload(fpath, rename_on_success) if rename_on_success != "" else DeleteAfterUpload(fpath)
         s3.upload_file(fpath, BUCKET, s3path, Callback=callback)
         log.info(f"Wrote {file_name} to s3://{BUCKET}/{s3path}; renamed={rename_on_success}")
 
