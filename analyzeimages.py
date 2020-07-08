@@ -15,7 +15,9 @@ import sys
 import numpy as np
 import tensorflow as tf
 from saveimages import *
-from PIL import Image
+from PIL import Image, ImageFile
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 # TODO: Find another way to include object_detection package
 sys.path.append('./models-master/research/')
