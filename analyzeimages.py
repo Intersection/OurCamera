@@ -128,14 +128,14 @@ class AnalyzeImages:
                 num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
                 while True:
-                    for testpath in os.listdir(path_images_dir):
+                    for img_fname in os.listdir(path_images_dir):
                         start_time = time.time()
 
-                        timestamp, location_id = SaveImages.get_timestamp_and_location_id(testpath)
-                        dir_testpath = os.path.join(path_images_dir, testpath)
+                        timestamp, location_id = SaveImages.get_timestamp_and_location_id(img_fname)
+                        img_fpath = os.path.join(path_images_dir, img_fname)
 
-                        if timestamp == 0 and os.path.exists(dir_testpath):
-                            os.remove(dir_testpath)
+                        if timestamp == 0 and os.path.exists(img_fpath):
+                            os.remove(img_fpath)
                             continue
 
                         num_cars = 0
@@ -143,16 +143,16 @@ class AnalyzeImages:
                         num_people = 0
 
                         try:
-                            with Image.open(dir_testpath) as image:
+                            with Image.open(img_fpath) as image:
                                 image_np = AnalyzeImages.load_image_into_numpy_array(image)
                         except IOError:
-                            log.exception(f"Issue opening directory={dir_testpath}")
-                            os.remove(dir_testpath)
+                            log.exception(f"Issue opening file={img_fpath}")
+                            os.remove(img_fpath)
                             continue
 
                         if image_np.size == 0:
-                            log.info("Skipping image=" + testpath)
-                            os.remove(dir_testpath)
+                            log.info("Skipping image=" + img_fname)
+                            os.remove(img_fpath)
                             continue
 
                         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
@@ -197,10 +197,10 @@ class AnalyzeImages:
                                 use_normalized_coordinates=True,
                                 line_thickness=2)
                             log.info(f"save_directory={save_directory}")
-                            log.info(f"testpath={testpath}")
-                            Image.fromarray(image_np).save(save_directory + "/" + testpath)
-                            AnalyzeImages.save_annotated_image(testpath, save_directory + "/" + testpath, "annotated")
-                        os.remove(dir_testpath)
+                            log.info(f"img_fname={img_fname}")
+                            Image.fromarray(image_np).save(save_directory + "/" + img_fname)
+                            AnalyzeImages.save_annotated_image(img_fname, save_directory + "/" + img_fname, "annotated")
+                        os.remove(img_fpath)
 
 
 if __name__ == '__main__':
