@@ -51,7 +51,7 @@ def execute_scan(dynamodb_client, input):
 
 
 def save_response(resp, filename):
-    header = ['cameraLocationId', 'timestamp', 'people']
+    header = ['cameraLocationId', 'timestamp', 'people', 'trucks', 'cars']
 
     with open(filename, 'w') as f:
         writer = csv.DictWriter(f, fieldnames=header)
@@ -61,7 +61,9 @@ def save_response(resp, filename):
             writer.writerow({
                 'cameraLocationId': i['cameraLocationId']['S'],
                 'timestamp': i['timestamp']['S'],
-                'people': i['people']['N']
+                'people': i['people']['N'],
+                'cars': i['cars']['N'],
+                'trucks': i['trucks']['N'],
             })
 
 
