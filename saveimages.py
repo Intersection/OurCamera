@@ -23,6 +23,9 @@ import boto3
 import requests
 import urllib3
 
+from attr import dataclass
+
+
 DOT_CAMERA_LIST_URL = "https://webcams.nyctmc.org/new-data.php?query="
 # DOT_CAMERA_LIST_URL = "https://dotsignals.org/new-data.php?query="
 DOT_CAMERA_ID_URL = "https://webcams.nyctmc.org/google_popup.php?cid="
