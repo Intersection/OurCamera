@@ -130,15 +130,18 @@ class AnalyzeImages:
                 while True:
                     for testpath in os.listdir(path_images_dir):
                         start_time = time.time()
+
                         timestamp, location_id = SaveImages.get_timestamp_and_location_id(testpath)
-                        if timestamp == 0:
-                            os.remove(path_images_dir + "/" + testpath)
+                        dir_testpath = os.path.join(path_images_dir, testpath)
+
+                        if timestamp == 0 and os.path.exists(dir_testpath):
+                            os.remove(dir_testpath)
                             continue
+
                         num_cars = 0
                         num_trucks = 0
                         num_people = 0
 
-                        dir_testpath = path_images_dir + '/' + testpath
                         try:
                             with Image.open(dir_testpath) as image:
                                 image_np = AnalyzeImages.load_image_into_numpy_array(image)
