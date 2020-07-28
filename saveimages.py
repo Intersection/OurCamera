@@ -24,7 +24,7 @@ import requests
 import urllib3
 
 from attr import dataclass
-
+from argparse import RawTextHelpFormatter
 
 DOT_CAMERA_LIST_URL = "https://webcams.nyctmc.org/new-data.php?query="
 # DOT_CAMERA_LIST_URL = "https://dotsignals.org/new-data.php?query="
@@ -284,9 +284,19 @@ class SaveImages:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Save images')
-    parser.add_argument('--access_key', help='aws access key')
-    parser.add_argument('--secret_key', help='aws secret key')
+    parser = argparse.ArgumentParser(
+        description=
+        'Save images module. The following envvars are supported:\n\n' +
+        '\n'.join(
+            f'{k.ljust(40)}{v}' for k, v in {
+                'AWS_ACCESS_KEY_ID': 'AWS access key ID to connect to DynamoDB',
+                'AWS_SECRET_ACCESS_KEY': 'AWS secret access key to connect to DynamoDB',
+                'CAMERA_ID (optional)': 'CameraID to start gathering data for',
+                f'NUM_WORKERS (optional, default {SaveImagesConfig.DEFAULT_NUM_WORKERS})':
+                    'Num of concurrent processes to get camera data'
+            }.items()),
+        formatter_class=RawTextHelpFormatter
+    )
     args = parser.parse_args()
 
     ACCESS_KEY = os.environ['AWS_ACCESS_KEY_ID']
