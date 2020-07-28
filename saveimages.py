@@ -30,11 +30,17 @@ DOT_CAMERA_ID_URL = "https://webcams.nyctmc.org/google_popup.php?cid="
 saveDirectory = "/tmp/rawimages/"
 outDirectory = "/tmp/preprocessed/"
 BUCKET = "intersection-ourcamera"
-MAX_FILES_TO_DOWNLOAD = 2000
-NUMBER_FILES_DOWNLOAD_LIMIT = 1000
+
 save_to_aws = True
 ACCESS_KEY = ""
 SECRET_KEY = ""
+
+
+@dataclass(frozen=True)
+class SaveImagesConfig:
+    MAX_FILES_TO_DOWNLOAD = 2000
+    NUMBER_FILES_DOWNLOAD_LIMIT = 1000
+
 
 # noinspection PyArgumentList
 logging.basicConfig(
@@ -194,8 +200,8 @@ class SaveImages:
         log.info(f"Got {len(loc_markers)} camera locations without ID to fill")
         for marker in loc_markers:
             i += 1
-            if i > NUMBER_FILES_DOWNLOAD_LIMIT:
-                log.info(f"Got more than {NUMBER_FILES_DOWNLOAD_LIMIT} cameras to work with. Exiting.")
+            if i > SaveImagesConfig.NUMBER_FILES_DOWNLOAD_LIMIT:
+                log.info(f"Got more than {SaveImagesConfig.NUMBER_FILES_DOWNLOAD_LIMIT} cameras to work with. Exiting.")
                 return camera_objects_without_camera_id
             camera_object = CameraObject()
             camera_object.locationId = marker["id"]
@@ -276,7 +282,7 @@ if __name__ == '__main__':
     SaveImages.download_dot_files(pool, cameraObjects)
     try:
         while True:
-            if SaveImages.return_true_to_download_more_images(MAX_FILES_TO_DOWNLOAD):
+            if SaveImages.return_true_to_download_more_images(SaveImagesConfig.MAX_FILES_TO_DOWNLOAD):
                 SaveImages.download_dot_files(pool, cameraObjects)
             else:
                 log.info("sleeping")
