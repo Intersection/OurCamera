@@ -196,10 +196,11 @@ class AnalyzeImages:
                                 min_score_thresh=0.4,
                                 use_normalized_coordinates=True,
                                 line_thickness=2)
-                            log.info(f"save_directory={save_directory}")
-                            log.info(f"img_fname={img_fname}")
-                            Image.fromarray(image_np).save(save_directory + "/" + img_fname)
-                            AnalyzeImages.save_annotated_image(img_fname, save_directory + "/" + img_fname, "annotated")
+
+                            save_img_fpath = os.path.join(save_directory, img_fname)
+                            Image.fromarray(image_np).save(save_img_fpath)
+                            log.info(f"Saved image to path={save_img_fpath}")
+                            AnalyzeImages.save_annotated_image(img_fname, save_img_fpath, "annotated")
                         os.remove(img_fpath)
 
 
