@@ -153,7 +153,7 @@ class SaveImages:
             return
 
         s3 = boto3.client('s3', aws_access_key_id=key, aws_secret_access_key=secret)
-        s3path = s3_base_directory + "/" + SaveImages.get_s3_path(file_name)
+        s3path = '/'.join([s3_base_directory, SaveImages.get_s3_path(file_name)])
 
         callback = RenameAfterUpload(fpath, rename_on_success) if rename_on_success != "" else DeleteAfterUpload(fpath)
         s3.upload_file(fpath, BUCKET, s3path, Callback=callback)
@@ -162,7 +162,7 @@ class SaveImages:
     @staticmethod
     def get_s3_path(file_name):
         now = datetime.datetime.now()
-        return str(now.year) + "/" + str(now.month) + "/" + str(now.day) + "/" + str(now.hour) + "/" + file_name
+        return '/'.join([str(v) for v in [now.year, now.month, now.day, now.hour, file_name]])
 
     @staticmethod
     def get_string_format(camera_object):
@@ -183,7 +183,7 @@ class SaveImages:
         try:
             resp = requests.get(DOT_CAMERA_LIST_URL, verify=VERIFY_SSL_CERT)
         except:
-            log.exception(f"Coudl not make GET request to url={DOT_CAMERA_LIST_URL}")
+            log.exception(f"Could not make GET request to url={DOT_CAMERA_LIST_URL}")
             log.info("FAILED First version")
             raise
         else:
@@ -237,7 +237,7 @@ class SaveImages:
 
     @staticmethod
     def return_true_to_download_more_images(number_files_download_point):
-        if len([name for name in os.listdir(outDirectory)]) < number_files_download_point:
+        if len(os.listdir(outDirectory)) < number_files_download_point:
             return True
         return False
 
