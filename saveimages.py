@@ -121,6 +121,7 @@ class RenameAfterUpload(object):
             self._seen_so_far += bytes_amount
             percentage = (self._seen_so_far / self._size) * 100
             if percentage == 100.0:
+                log.info(f'File @{self._current_file_path} {"exists" if os.path.exists(self._current_file_path) else "does not exist"}')
                 os.rename(self._current_file_path, self._next_file_path)
 
     def __str__(self):
