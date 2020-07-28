@@ -27,8 +27,8 @@ DOT_CAMERA_LIST_URL = "https://webcams.nyctmc.org/new-data.php?query="
 # DOT_CAMERA_LIST_URL = "https://dotsignals.org/new-data.php?query="
 DOT_CAMERA_ID_URL = "https://webcams.nyctmc.org/google_popup.php?cid="
 # DOT_CAMERA_ID_URL = "https://dotsignals.org/google_popup.php?cid="
-saveDirectory = "/tmp/rawimages/"
-outDirectory = "/tmp/preprocessed/"
+saveDirectory = "/tmp/rawimages"
+outDirectory = "/tmp/preprocessed"
 BUCKET = "intersection-ourcamera"
 
 save_to_aws = True
@@ -81,7 +81,7 @@ def save_file(camera_object):
     url = "http://207.251.86.238/cctv"
     append = ".jpg?math=0.011125243364920934"
     file_name = SaveImages.get_string_format(camera_object)
-    file_path = saveDirectory + file_name
+    file_path = os.path.join(saveDirectory, file_name)
     url_to_save = url + str(camera_id) + append
     log.info("trying to download" + url_to_save)
 
@@ -101,7 +101,7 @@ def save_file(camera_object):
                 logging.exception(f"Could not write image content to file={file_path}")
                 raise
             else:
-                rename_on_success = outDirectory + "/" + file_name
+                rename_on_success = os.path.join(outDirectory, file_name)
                 SaveImages.save_file_to_s3(file_path, file_name, "raw", rename_on_success, ACCESS_KEY, SECRET_KEY)
 
 
