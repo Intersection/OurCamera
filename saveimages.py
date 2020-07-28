@@ -279,8 +279,10 @@ if __name__ == '__main__':
     parser.add_argument('--access_key', help='aws access key')
     parser.add_argument('--secret_key', help='aws secret key')
     args = parser.parse_args()
-    ACCESS_KEY = args.access_key
-    SECRET_KEY = args.secret_key
+
+    ACCESS_KEY = os.environ['AWS_ACCESS_KEY_ID']
+    SECRET_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+    
     SaveImages.make_sure_directories_exist()
 
     # TODO: Substitute multiprocessing with async / greenlets programming
