@@ -120,6 +120,9 @@ class RenameAfterUpload(object):
             if percentage == 100.0:
                 os.rename(self._current_file_path, self._next_file_path)
 
+    def __str__(self):
+        return f'{self.__class__.__name__}({self._current_file_path}, {self._next_file_path})'
+
 
 class DeleteAfterUpload(object):
     def __init__(self, current_file_path):
@@ -135,6 +138,9 @@ class DeleteAfterUpload(object):
             if percentage == 100.0:
                 os.remove(self._current_file_path)
 
+    def __str__(self):
+        return f'{self.__class__.__name__}({self._current_file_path})'
+
 
 class SaveImages:
     @staticmethod
@@ -147,7 +153,7 @@ class SaveImages:
 
         callback = RenameAfterUpload(fpath, rename_on_success) if rename_on_success != "" else DeleteAfterUpload(fpath)
         s3.upload_file(fpath, BUCKET, s3path, Callback=callback)
-        log.info(f"Wrote {file_name} to s3://{BUCKET}/{s3path}; renamed={rename_on_success}")
+        log.info(f"Wrote {file_name} to s3://{BUCKET}/{s3path}; callback={callback}")
 
     @staticmethod
     def get_s3_path(file_name):
