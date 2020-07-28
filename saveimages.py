@@ -43,6 +43,9 @@ SECRET_KEY = ""
 class SaveImagesConfig:
     MAX_FILES_TO_DOWNLOAD = 2000
     NUMBER_FILES_DOWNLOAD_LIMIT = 1000
+    MULTIPROCESS_SLEEP_SECS = 11
+    SINGLEPROCESS_SLEEP_SECS = 1
+    DEFAULT_NUM_WORKERS = 20
 
 
 # noinspection PyArgumentList
@@ -291,19 +294,52 @@ if __name__ == '__main__':
     
     SaveImages.make_sure_directories_exist()
 
+    camera_ids = os.getenv('CAM_IDS_LOCATION_IDS', None)
+    if camera_ids is None:
+        log.info("Loading all camera objects")
+        cameraObjects = SaveImages.fill_camera_objects_with_camera_id(SaveImages.get_camera_objects_without_camera_id())
+        SaveImages.save_objects_to_file("/tmp/objects.json", cameraObjects)
+        for_seconds = SaveImagesConfig.MULTIPROCESS_SLEEP_SECS
+        num_processes = os.getenv('NUM_WORKERS', SaveImagesConfig.DEFAULT_NUM_WORKERS)
+    else:
+        def create_cam_obj(cam_id, cam_loc_id):
+            co = CameraObject()
+            co.cameraId = int(cam_id)
+            co.locationId = int(cam_loc_id)
+            return co
+
+        log.info(f"Loading camera ID data = {camera_ids}")
+
+        cameras = camera_ids.split(';')
+
+        cameraObjects = []
+        for c in cameras:
+            try:
+                cid, clid = c.split(',')
+            except ValueError:
+                log.error(f"Malformed item='{c}' in config='{camera_ids}'. Config should look like 'c1,cl1;c2,cl2...'")
+            else:
+                try:
+                    cam_obj = create_cam_obj(cam_id=cid, cam_loc_id=clid)
+                except ValueError:
+                    log.error(f"Could not create camera object from camera ID={cid} and camera location ID={clid}")
+                else:
+                    cameraObjects.append(cam_obj)
+
+        for_seconds = SaveImagesConfig.SINGLEPROCESS_SLEEP_SECS
+        num_processes = len(cameraObjects)
+
     # TODO: Substitute multiprocessing with async / greenlets programming
-    pool = Pool(processes=20)  # start 4 worker processes
-    cameraObjects = SaveImages.fill_camera_objects_with_camera_id(SaveImages.get_camera_objects_without_camera_id())
-    # log.info("cameraObjects " + str(cameraObjects))
-    SaveImages.save_objects_to_file("/tmp/objects.json", cameraObjects)
-    SaveImages.download_dot_files(pool, cameraObjects)
+    pool = Pool(processes=num_processes)
     try:
+        SaveImages.download_dot_files(pool, cameraObjects)
         while True:
             if SaveImages.return_true_to_download_more_images(SaveImagesConfig.MAX_FILES_TO_DOWNLOAD):
                 SaveImages.download_dot_files(pool, cameraObjects)
-            else:
-                log.info("sleeping")
-                time.sleep(10.0)
+                log.info(f'Downloaded data from {len(cameraObjects)} cameras')
+
+            log.info("sleeping")
+            time.sleep(for_seconds)
     except:
         log.exception("An error occurred while downloading files. Exiting.")
     finally:
