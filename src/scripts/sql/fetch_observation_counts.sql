@@ -41,7 +41,7 @@ const as (
 ),
 result as (
   select
-    g.ts_cell,
+    g.ts_cell * g.time_span as ts_cell,
     coalesce(c.cnt, 0) as cnt
   from
     ts_grid_range g
