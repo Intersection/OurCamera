@@ -45,6 +45,13 @@ def create_scan_input(camera_location_id, begin_timestamp, end_timestamp):
     }
 
 
+def create_page_input(tpl, resp):
+    tpl.update({
+        "ExclusiveStartKey": resp["LastEvaluatedKey"],
+    })
+    return tpl
+
+
 def execute_scan(dynamodb_client, input):
     try:
         response = dynamodb_client.query(**input)
@@ -54,7 +61,7 @@ def execute_scan(dynamodb_client, input):
         handle_error(error)
         raise
     else:
-        return response['Items']
+        return response
 
 
 def save_response(resp, filename):
@@ -72,6 +79,10 @@ def save_response(resp, filename):
                 'cars': i['cars']['N'],
                 'trucks': i['trucks']['N'],
             })
+
+
+def has_pages(resp):
+    return 'LastEvaluatedKey' in resp
 
 
 def handle_error(error):
@@ -111,8 +122,12 @@ def main():
     args = parser.parse_args()
 
     loc_id = args.location_id
-    begin_ts = int(datetime.strptime(args.begin_ts, '%Y-%m-%d %H:%M:%S').timestamp())
-    end_ts = int(datetime.strptime(args.end_ts, '%Y-%m-%d %H:%M:%S').timestamp())
+
+    begin_dt = datetime.strptime(args.begin_ts, '%Y-%m-%d %H:%M:%S%z')
+    begin_ts = int(begin_dt.timestamp())
+
+    end_dt = datetime.strptime(args.end_ts, '%Y-%m-%d %H:%M:%S%z')
+    end_ts = int(end_dt.timestamp())
 
     # Create the dictionary containing arguments for scan call
     scan_input = create_scan_input(camera_location_id=loc_id, begin_timestamp=begin_ts, end_timestamp=end_ts)
@@ -120,9 +135,17 @@ def main():
     # Call DynamoDB's scan API
     resp = execute_scan(dynamodb_client, scan_input)
 
-    output_fname = f'result_{loc_id}.csv'
+    data = []
+    while has_pages(resp):
+        base_scan_input = create_scan_input(camera_location_id=loc_id, begin_timestamp=begin_ts, end_timestamp=end_ts)
+        page_input = create_page_input(base_scan_input, resp)
 
-    save_response(resp, output_fname)
+        resp = execute_scan(dynamodb_client, page_input)
+        data.extend(resp['Items'])
+
+    output_fname = f"camera_{loc_id}_{begin_dt.strftime('%Y%m%d_%H%M%S%z')}_{end_dt.strftime('%Y%m%d_%H%M%S%z')}.csv"
+
+    save_response(data, output_fname)
 
 
 if __name__ == "__main__":
