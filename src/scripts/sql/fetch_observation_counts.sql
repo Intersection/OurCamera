@@ -1,15 +1,10 @@
-//'MN-05-134168-L'
-//'8671ac0a-3880-4b4b-883b-380d534e11c1' // ID
-//'feb26c09-0879-4a9d-afdf-eda5942f67a7' // name
-//
-
 with
 const as (
   select
-    '2020-06-15' as start_date,
-    '2020-06-22' as end_date,
+    '2020-07-24 19:00:00 -04:00' as start_date,
+    '2020-07-28 19:00:00 -04:00' as end_date,
     60 as time_span,
-    'feb26c09-0879-4a9d-afdf-eda5942f67a7' as viewshed_name
+    '7c08c3fb-31ad-4fc7-8253-cddbd9ad2359' as viewshed_name
 )
 ,raw as (
   select
