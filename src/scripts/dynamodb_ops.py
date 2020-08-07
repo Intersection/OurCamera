@@ -14,13 +14,17 @@ ERROR_HELP_STRINGS = {
     'ProvisionedThroughputExceededException':
         'Request rate is too high. If you\'re using a custom retry strategy make \
         sure to retry with exponential back-off.' +
-        'Otherwise consider reducing frequency of requests or increasing provisioned capacity for your table or secondary index',
+        'Otherwise consider reducing frequency of requests or increasing provisioned '
+        'capacity for your table or secondary index',
     'ResourceNotFoundException': 'One of the tables was not found, verify table exists before retrying',
     'ServiceUnavailable': 'Had trouble reaching DynamoDB. generally safe to retry with exponential back-off',
     'ThrottlingException': 'Request denied due to throttling, generally safe to retry with exponential back-off',
-    'UnrecognizedClientException': 'The request signature is incorrect most likely due to an invalid AWS access key ID or secret key, fix before retrying',
-    'ValidationException': 'The input fails to satisfy the constraints specified by DynamoDB, fix input before retrying',
-    'RequestLimitExceeded': 'Throughput exceeds the current throughput limit for your account, increase account level throughput before retrying',
+    'UnrecognizedClientException': 'The request signature is incorrect most likely due to an invalid AWS access '
+                                   'key ID or secret key, fix before retrying',
+    'ValidationException': 'The input fails to satisfy the constraints specified by DynamoDB, '
+                           'fix input before retrying',
+    'RequestLimitExceeded': 'Throughput exceeds the current throughput limit for your account, '
+                            'increase account level throughput before retrying',
 }
 
 
@@ -102,8 +106,6 @@ def main():
         help='Enging timestamp in the format of "%Y-%m-%d %H:%M:%S" like "2020-06-15 11:12:13"'
     )
     args = parser.parse_args()
-    # print(args)
-    # exit()
 
     loc_id = args.location_id
     begin_ts = int(datetime.strptime(args.begin_ts, '%Y-%m-%d %H:%M:%S').timestamp())
