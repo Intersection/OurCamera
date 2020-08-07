@@ -35,10 +35,13 @@ def create_dynamodb_client(region="us-east-1"):
 def create_scan_input(camera_location_id, begin_timestamp, end_timestamp):
     return {
         "TableName": "ourcamera_v2",
-        "KeyConditionExpression": "#d7690 = :d7690 And #d7691 BETWEEN :d7691 AND :d7692",
+        "KeyConditionExpression": "#d7690 = :d7690 AND #d7691 BETWEEN :d7691 AND :d7692",
         "ExpressionAttributeNames": {"#d7690": "cameraLocationId", "#d7691": "timestamp"},
-        "ExpressionAttributeValues": {":d7690": {"S": str(camera_location_id)}, ":d7691": {"S": str(begin_timestamp)},
-                                      ":d7692": {"S": str(end_timestamp)}}
+        "ExpressionAttributeValues": {
+            ":d7690": {"S": str(camera_location_id)},
+            ":d7691": {"S": str(begin_timestamp)},
+            ":d7692": {"S": str(end_timestamp)}
+        }
     }
 
 
