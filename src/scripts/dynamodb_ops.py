@@ -135,7 +135,7 @@ def main():
     # Call DynamoDB's scan API
     resp = execute_scan(dynamodb_client, scan_input)
 
-    data = []
+    data = resp['Items']
     while has_pages(resp):
         base_scan_input = create_scan_input(camera_location_id=loc_id, begin_timestamp=begin_ts, end_timestamp=end_ts)
         page_input = create_page_input(base_scan_input, resp)
